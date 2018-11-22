@@ -1,0 +1,28 @@
+#settingsPanel {
+    top: 100px;
+    left: 25px;
+    position: absolute;
+    width: 300px;
+    z-index: 100;
+
+    .collapsible-body {
+        background-color: white;
+    }
+
+    @media (max-width: 576px) {
+        top: 20vh !important;
+        left: 5vw;
+        width: 90vw !important;
+    }
+}
+
+#mobileSettingsMenu {
+    position: absolute;
+    top: 10vh;
+    left: 5vw; 
+    height: 43px;
+    width: 43px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

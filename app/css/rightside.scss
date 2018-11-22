@@ -1,0 +1,46 @@
+#rightSide {
+    background-color: white;
+    width: 35vw;
+    height: 100vh;
+    top: 0;
+    right: 0;
+    position: absolute;
+    display: none;
+
+    #city-name {
+        padding: 20px;
+        height: 15vh;
+    }
+
+    #close-icon-rightSide {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
+        cursor: pointer;
+        color: black;
+    }
+
+    #articlesRight {
+        position: absolute;
+        bottom: 0px;
+        height: 85vh;
+        overflow: scroll;
+    }
+
+    .article {
+        display: flex;
+        padding: 20px;
+        margin-bottom: 0px;
+
+        a {
+            color: inherit;
+        }
+
+        .website-icon {
+            border-radius: 5px;
+            height: 48px;
+        }
+    }
+}
+

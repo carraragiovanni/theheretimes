@@ -2,14 +2,14 @@
     "device": null,
     "country": null,
     "languageInput": "auto",
-    "language": null,
+    "language": "en",
     "publishedSince": 7,
     "sortBy": "publishedAt",
     "mapSettings": {
         "location": {
-            "lat": null,
-            "lng": null
+            "lat": 46,
+            "lng": 9.18
         },
-        "zoom": null
+        "zoom": 8
     }
 }

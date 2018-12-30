@@ -41,8 +41,6 @@ module.exports = function(grunt) {
                     'node_modules/dexie/dist/dexie.js',
                     'node_modules/underscore/underscore.js',
                     'node_modules/axios/dist/axios.js',
-                    'node_modules/materialize-css/dist/js/materialize.js',
-                    'node_modules/materialize-css/extras/noUiSlider/nouislider.js',
                     'node_modules/webfontloader/webfontloader.js',
                     'node_modules/handlebars/dist/handlebars.js',
                 ],

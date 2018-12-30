@@ -45,13 +45,13 @@
 
 #pac-input {
     background-color: #fff;
-    font-family: Roboto;
-    font-size: 15px;
+    font-family: 'Courier New';
+    font-size: 18px;
     font-weight: 300;
     text-overflow: ellipsis;
     
     // CUSTOM
-    padding: 0 11px 0 11px;
+    padding: 10px;
     position: absolute;
     left: 25px !important;
     top: 25px !important;
@@ -69,9 +69,6 @@
     }
 }
 
-#pac-input:focus {
-    border-color: #4d90fe;
-}
 
 #title {
     color: #fff;

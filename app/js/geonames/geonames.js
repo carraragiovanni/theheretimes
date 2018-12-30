@@ -1,28 +1,26 @@
-async function getCitiesInBoundsGeonames(bounds) {
+async function getCitiesInBoundsGeonames(numberCities) {
     let username = 'carraragiovanni';
-    await getLanguage();
 
     return await axios({
-        method: 'get',
-        url: `http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=2&lang=${configuration.language}&username=${username}`,
+        method: 'GET',
+        url: `http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`,
     }).then(function (response) {
         return response.data.geonames;
     });
 }
 
-async function createIDBObject(geonamesCity) {
-    await getLanguage();
-
+function createIDBObject(geonamesCity) {
     let city = {
         name: geonamesCity.name,
         lat: geonamesCity.lat,
         lng: geonamesCity.lng,
         geonameId: geonamesCity.geonameId,
         language: configuration.language,
+        population: geonamesCity.population,
         articlesObj: [],
     }
 
-    await putIDBNewCity(city);
+    return city;
 }
 
 async function putIDBNewCity(city) {

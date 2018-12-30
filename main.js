@@ -3,84 +3,123 @@ let map;
 let bounds;
 let cities = [];
 let markers = [];
-let infoWindows = [];
-var slider = null;
 let openCity = null;
 let rightSideOpen = false;
 let cityIndex = 0;
 let cityID = 0;
 
-$(document).ready(function () {
-    // SETUP
-    initMap();
-    initSettings();
-    initLayout();
-    initAutocomplete();
+$(document).ready(async function () {
+    if (JSON.parse(localStorage.getItem('configuration')) == null) {
+        // FIRST VISIT
+        
+        await writeConfigurationFile();
+        
+        initSettings();
+
+        navigator.permissions.query({
+            name: 'geolocation'
+        }).then(function (PermissionStatus) {
+            if (PermissionStatus.state == "granted") {
+                initMapComponents();
+            }
+            getUserLocation().then(function() {
+                initMapComponents();
+            });
+        });
+    } else {
+        // NOT FIRST VISIT
+        
+        getLocalStorage();
+        initSettings();
+        initMapComponents();
+    }
 });
 
-async function initLayout() {
-    await forageLocalStorage();
+function initSettings() {
+    initLanguageSettings();
+    initDaysSincePublishedSettings();
+    initLayout();
+}
 
+function initMapComponents() {
+    initMap();
+    initAutocomplete();
+}
+
+function initLayout() {
+    resizeScreen();
+    
+    if (window.attachEvent) {
+        window.attachEvent('onresize', function () {
+            resizeScreen();
+        });
+    } else if (window.addEventListener) {
+        window.addEventListener('resize', function () {
+            resizeScreen();
+        }, true);
+    } else {
+        //The browser does not support Javascript event binding
+    }    
+}
+
+function resizeScreen() {
     if (window.outerWidth <= 576) {
         configuration.device = "mobile";
-        addMobileSettingMenu();
     } else {
-        configuration.device = "desktop"
-        $("#theHereTimesLogo").css("left", (window.outerWidth / 2) - ($("#theHereTimesLogo").width() / 2));
-    }
-}
-
-function addMobileSettingMenu() {
-    $("body").append(`<div id="mobileSettingsMenu"><i class="material-icons">menu</i></div>`);
-    $("#settingsPanel").addClass("hidden");
-    $("#settingsPanel").css("z-index", "0");
-
-    $("#mobileSettingsMenu").on("click", function() {
-        if ($("#settingsPanel").hasClass("hidden")) {
-            $("#settingsPanel").removeClass("hidden");
-            $("#settingsPanel").css("z-index", "100");
-        } else {
-            $("#settingsPanel").addClass("hidden");
-            $("#settingsPanel").css("z-index", "0");
-        }
-    })
-}
-
-async function mapIdle() {
-    let citiesInBoundsGeonames = await getCitiesInBoundsGeonames(bounds);
-
-    async function asyncCreation(citiesInBoundsGeonames) {
-        for await (const geonamesCity of citiesInBoundsGeonames) {
-            await createIDBObject(geonamesCity);
-        }
+        configuration.device = "desktop";
     }
 
-    await asyncCreation(citiesInBoundsGeonames);
+    $("#theHereTimesLogo").css("left", (window.outerWidth / 2) - ($("#theHereTimesLogo").width() / 2));
     
-    let cities = await getCitiesInBoundsinIDB(bounds);
-
-    await getLanguage();
-
-    let languageCities = _.filter(cities, function (city) {
-        return city.language == configuration.language;
-    });
-
-    languageCities.forEach(async function (city) {
-        addMarkerandInfoWindow(city);
-    });
+    setLocalStorage(configuration);
 }
-
-async function getCitiesInBoundsinIDB(bounds) {
-    let cities = await db.cities.toArray();
-    let citiesInBounds = [];
-    cities.forEach(function(city) {
-        if (city.lng <= bounds.east && city.lng >= bounds.west) {
-            if (city.lat <= bounds.north && city.lat >= bounds.south) {
-                citiesInBounds.push(city);
+async function mapIdle() {
+    let citiesToMap = [];
+    
+    if (configuration.languageInput == "auto") {
+        await autoLanguage();
+    }
+    
+    let existingCitiesInIDB = await getCitiesInBoundsinIDB(bounds);
+    
+    
+    existingCitiesInIDB.forEach(function (city) {
+        if (city.lat < bounds.north && city.lat > bounds.south && city.lng < bounds.east && city.lng > bounds.west) {
+            if (city.language == configuration.language) {
+                citiesToMap.push(city);
             }
         }
     });
-    return citiesInBounds;
+    
+    async function asyncCreation(newCities) {
+        for await (const city of newCities) {
+            let citytoAdd = createIDBObject(city);
+    
+            if (!_.findWhere(citiesToMap, {"geonameID": citytoAdd.geonamesID})) {
+                db.cities.put(citytoAdd);
+                citiesToMap.push(citytoAdd);
+            }
+        }
+    }
+    
+    if (citiesToMap.length < 3) {
+        let newCities = await getCitiesInBoundsGeonames(3 - citiesToMap.length);
+        await asyncCreation(newCities);
+    } else {
+        citiesToMap = reduceSortCities(citiesToMap);
+    }
+
+    console.log(citiesToMap);
+    
+    citiesToMap.forEach(function (city) {
+        addMarkerandInfoWindow(citiesToMap, city);
+    });
+}
+
+function reduceSortCities(citiesToMap) {
+    citiesToMap = _.sortBy(citiesToMap, 'population').reverse();
+    citiesToMap = citiesToMap.slice(0, 3);
+    return citiesToMap;
 }
 
 const db = new Dexie('citiesDatabase');
@@ -89,33 +128,32 @@ db.version(1).stores({
     cities: 'id++, city, geonamesId, language, articles, articlesLastDownload'
 });
 
-
-
-async function getCitiesInBoundsGeonames(bounds) {
+async function getCitiesInBoundsinIDB() {
+    return await db.cities.toArray();
+}
+async function getCitiesInBoundsGeonames(numberCities) {
     let username = 'carraragiovanni';
-    await getLanguage();
 
     return await axios({
-        method: 'get',
-        url: `http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=2&lang=${configuration.language}&username=${username}`,
+        method: 'GET',
+        url: `http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`,
     }).then(function (response) {
         return response.data.geonames;
     });
 }
 
-async function createIDBObject(geonamesCity) {
-    await getLanguage();
-
+function createIDBObject(geonamesCity) {
     let city = {
         name: geonamesCity.name,
         lat: geonamesCity.lat,
         lng: geonamesCity.lng,
         geonameId: geonamesCity.geonameId,
         language: configuration.language,
+        population: geonamesCity.population,
         articlesObj: [],
     }
 
-    await putIDBNewCity(city);
+    return city;
 }
 
 async function putIDBNewCity(city) {
@@ -149,7 +187,22 @@ Handlebars.registerHelper('extractDomain', function (url) {
 Handlebars.registerHelper('parsePublishetAtDate', function (publishedAt) {
     return moment(publishedAt).format("L");
 });
-function initMap() {    
+function updateBoundsAndZoom(map) {
+    bounds = {
+        north: map.getBounds().ma.l,
+        south: map.getBounds().ma.j,
+        east: map.getBounds().fa.l,
+        west: map.getBounds().fa.j
+    }
+
+    configuration.mapSettings.location.lat = map.getCenter().lat();
+    configuration.mapSettings.location.lng = map.getCenter().lng();
+    configuration.mapSettings.zoom = map.getZoom();
+
+    setLocalStorage(configuration);
+}
+
+function initMap() {  
     let options = {
         zoomControl: false,
         mapTypeControl: false,
@@ -158,218 +211,26 @@ function initMap() {
         rotateControl: false,
         fullscreenControl: false,
         center: {
-            lat: 0,
-            lng: 0
+            lat: configuration.mapSettings.location.lat,
+            lng: configuration.mapSettings.location.lng
         },
         zoom: 8,
-        styles: [{
-                "elementType": "geometry",
-                "stylers": [{
-                    "color": "#f5f5f5"
-                }]
-            },
-            {
-                "elementType": "labels.icon",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "elementType": "labels.text.fill",
-                "stylers": [{
-                    "color": "#616161"
-                }]
-            },
-            {
-                "elementType": "labels.text.stroke",
-                "stylers": [{
-                    "color": "#f5f5f5"
-                }]
-            },
-            {
-                "featureType": "administrative.land_parcel",
-                "elementType": "labels",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "featureType": "administrative.land_parcel",
-                "elementType": "labels.text.fill",
-                "stylers": [{
-                    "color": "#bdbdbd"
-                }]
-            },
-            {
-                "featureType": "poi",
-                "elementType": "geometry",
-                "stylers": [{
-                    "color": "#eeeeee"
-                }]
-            },
-            {
-                "featureType": "poi",
-                "elementType": "labels.text",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "featureType": "poi",
-                "elementType": "labels.text.fill",
-                "stylers": [{
-                    "color": "#757575"
-                }]
-            },
-            {
-                "featureType": "poi.business",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "featureType": "poi.park",
-                "elementType": "geometry",
-                "stylers": [{
-                    "color": "#e5e5e5"
-                }]
-            },
-            {
-                "featureType": "poi.park",
-                "elementType": "labels.text.fill",
-                "stylers": [{
-                    "color": "#9e9e9e"
-                }]
-            },
-            {
-                "featureType": "road",
-                "elementType": "geometry",
-                "stylers": [{
-                    "color": "#ffffff"
-                }]
-            },
-            {
-                "featureType": "road",
-                "elementType": "labels.icon",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "featureType": "road.arterial",
-                "elementType": "labels",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "featureType": "road.arterial",
-                "elementType": "labels.text.fill",
-                "stylers": [{
-                    "color": "#757575"
-                }]
-            },
-            {
-                "featureType": "road.highway",
-                "elementType": "geometry",
-                "stylers": [{
-                    "color": "#dadada"
-                }]
-            },
-            {
-                "featureType": "road.highway",
-                "elementType": "labels",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "featureType": "road.highway",
-                "elementType": "labels.text.fill",
-                "stylers": [{
-                    "color": "#616161"
-                }]
-            },
-            {
-                "featureType": "road.local",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "featureType": "road.local",
-                "elementType": "labels",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "featureType": "road.local",
-                "elementType": "labels.text.fill",
-                "stylers": [{
-                    "color": "#9e9e9e"
-                }]
-            },
-            {
-                "featureType": "transit",
-                "stylers": [{
-                    "visibility": "off"
-                }]
-            },
-            {
-                "featureType": "transit.line",
-                "elementType": "geometry",
-                "stylers": [{
-                    "color": "#e5e5e5"
-                }]
-            },
-            {
-                "featureType": "transit.station",
-                "elementType": "geometry",
-                "stylers": [{
-                    "color": "#eeeeee"
-                }]
-            },
-            {
-                "featureType": "water",
-                "elementType": "geometry",
-                "stylers": [{
-                    "color": "#c9c9c9"
-                }]
-            },
-            {
-                "featureType": "water",
-                "elementType": "labels.text.fill",
-                "stylers": [{
-                    "color": "#9e9e9e"
-                }]
-            }
-        ]
     }
     
     map = new google.maps.Map($('#map')[0], options);
     
     map.addListener('idle', function () {
-        bounds = {
-            north: map.getBounds().l.l,
-            south: map.getBounds().l.j,
-            east: map.getBounds().j.l,
-            west: map.getBounds().j.j
-        }
-
-        configuration.mapSettings.location.lat = map.getCenter().lat();
-        configuration.mapSettings.location.lng = map.getCenter().lng();
-        configuration.mapSettings.zoom = map.getZoom();
-
-        setLocalStorage(configuration);
+        updateBoundsAndZoom(map);
 
         mapIdle();
     });
 
+    map.addListener('dragstart', function () {
+        $("#customInfoWindowContainer").empty();
+    })
 }
 
-async function addMarkerandInfoWindow(city) {
-    let cities = await db.cities.toArray();
+async function addMarkerandInfoWindow(cities, city) {
     let marker = new google.maps.Marker({
         position: {
             lat: city.lat,
@@ -377,68 +238,53 @@ async function addMarkerandInfoWindow(city) {
         },
         map: map
     });
-    
-    markers.push(marker);
-    _.findWhere(cities, {id: city.id}).marker = marker;
-    
-    let contentString = '<div class="infoWindowContainerCustom">' +
-        `<div id="content" data-id=${city.id}>` +
-        `<div id="siteNotice">` +
-        `</div>` +
-        `<h4 id="firstHeading" class="firstHeading">${city.name}</h4>` +
-        `<div id="bodyContent">` +
-        `</div>` +
-        `</div>` +
-        `</div>`;
-    
-    let infoWindow = new google.maps.InfoWindow({
-        content: contentString
-    });
 
-    infoWindows.push(infoWindow);
-
-    _.findWhere(cities, {id: city.id}).infoWindow = infoWindow;
-
-    marker.addListener('click', async function () {
+    marker.addListener('click', async function (marker) {
+        addCustomInfoWindow(city);
         rightSideOpen = true;
         map.setCenter({
             lat: city.lat,
             lng: city.lng
         });
-        infoWindows.forEach(function(infoWindow) {
-            infoWindow.close();
-        })
-        infoWindow.open(map, marker);
         sideRightOpenAndParse(city);
         openCity = city.id;
     });
+}
 
-    infoWindow.addListener('closeclick', function () {
-        $("#rightSide").hide();
-        rightSideOpen = false;
-    });
+function addCustomInfoWindow(city) {
+    renderTemplate("customInfoWindow", city.name, $("#customInfoWindowContainer"));
+    $("#customInfoWindowContainer").css("top", (((window.innerHeight) / 2) - ($("#customInfoWindowContainer").height() / 2) + (60)));
+    $("#customInfoWindowContainer").css("left", (((window.innerWidth) / 2) - ($("#customInfoWindowContainer").width() / 2)));
 }
 
 function clearOverlays() {
     for (var i = 0; i < markers.length; i++) {
         markers[i].setMap(null);
     }
-    
-    for (var i = 0; i < infoWindows.length; i++) {
-        infoWindows[i].setMap(null);
+}
+
+// Sets the map on all markers in the array.
+function setMapOnAll(map) {
+    for (var i = 0; i < markers.length; i++) {
+        markers[i].setMap(map);
     }
 }
 
-function getBounds() {
-    bounds = {
-        north: map.getBounds().l.l,
-        south: map.getBounds().l.j,
-        east: map.getBounds().j.l,
-        west: map.getBounds().j.j
-    }
-    return bounds;
+// Removes the markers from the map, but keeps them in the array.
+function clearMarkers() {
+    setMapOnAll(null);
 }
 
+// Shows any markers currently in the array.
+function showMarkers() {
+    setMapOnAll(map);
+}
+
+// Deletes all markers in the array by removing references to them.
+function deleteMarkers() {
+    clearMarkers();
+    markers = [];
+}
 function initAutocomplete() {
     // Create the search box and link it to the UI element.
     var input = document.getElementById('pac-input');
@@ -487,12 +333,12 @@ async function newsAPI(city) {
     let apiKeyNewsAPI = '22f8d579867948f991198b333b9a967d';
     // let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
     // let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
-    let language = configuration.language;
-    let datePublishedSince = calendarDaySincePublished();
+    
+    let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
 
     return await axios({
         method: 'get',
-        url: `https://newsapi.org/v2/everything?q=${city.name}&language=${language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}&apiKey=${apiKeyNewsAPI}`,
+        url: `https://newsapi.org/v2/everything?q=${city.name}&language=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}&apiKey=${apiKeyNewsAPI}`,
     }).then(async function (response) {
         articleObj = {
             articles: response.data.articles,
@@ -505,10 +351,6 @@ async function newsAPI(city) {
         await db.cities.put(city);
         return city;
     });
-}
-
-function calendarDaySincePublished() {
-    return moment().subtract(configuration.publishedSince, "days").toISOString();
 }
 async function sideRightOpenAndParse(city) {
     if (configuration.device == "desktop") {
@@ -561,135 +403,116 @@ async function sideRightOpenAndParse(city) {
     }
 }
 
-function forageLocalStorage() {
-    if (localStorage.getItem('configuration')) {
-        configuration = JSON.parse(localStorage.getItem('configuration'));
-    } else {
-        axios.get("configuration.json").then(function (data) {
-            localStorage.setItem('configuration', JSON.stringify(data.data));
-            configuration = data.data;
-        });
-    }
-}
-
-function setLocalStorage(configuration) {
-    localStorage.setItem('configuration', JSON.stringify(configuration));
-}
-
-async function initSettings() {
-    await forageLocalStorage();
-    initSettingsPanel();
-
-    $('#language-selector').on("change", async function () {
-        configuration.languageInput = $(this).val();
-        await getLanguage();
-        setLocalStorage(configuration);
-        clearOverlays();
-        $("#rightSide").hide();
-        google.maps.event.trigger(map, 'idle');
-    });
-
-    $("#sort-by-selector").on("change", async function () {
-        configuration.sortBy = $(this).val();
-        setLocalStorage(configuration);
-        clearOverlays();
-        $("#rightSide").hide();
-        google.maps.event.trigger(map, 'idle');
+async function writeConfigurationFile() {
+    return await axios.get("configuration.json").then(function (data) {
+        localStorage.setItem('configuration', JSON.stringify(data.data));
+        configuration = data.data;
     });
 }
 
-function initSettingsPanel() {
-    renderTemplate("settingsPanel", null, $("#settingsPanel"));
-    
-    setCenter()
-
-    $('.collapsible').collapsible();
-    initSlider();
-    $('#language-selector').val(configuration.languageInput);
-    $('#language-selector').formSelect();
-    $('#sort-by-selector').val(configuration.sortBy);
-    $('#sort-by-selector').formSelect();
+function getLocalStorage() {
+    configuration = JSON.parse(localStorage.getItem('configuration'));
 }
 
-function setCenter() {
-    if (configuration.mapSettings.location.lat == 0) {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function (position) {
-                let pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                map.setCenter(pos);
-                configuration.mapSettings.location.lat = pos.lat;
-                configuration.mapSettings.location.lng = pos.lng;
-            });
+async function setLocalStorage(configuration) {
+    return await localStorage.setItem('configuration', JSON.stringify(configuration));
+}
+
+async function initLanguageSettings() {
+    $("input[name=language]:radio").each(function(i, e) {
+        if (e.value == configuration.languageInput) {
+            $(this).attr("checked", true);
         }
-    } else {
-        let pos = {
-            lat: configuration.mapSettings.location.lat,
-            lng: configuration.mapSettings.location.lng
-        };
-        map.setCenter(pos);
-        map.setZoom(configuration.mapSettings.zoom);
-    }
-}
-
-function initSlider() {
-    slider = document.getElementById('date-slider');
-    noUiSlider.create(slider, {
-        start: [7],
-        step: 1,
-        range: {
-            'min': [1],
-            'max': [30]
-        },
-        format: wNumb({
-            decimals: .1
-        })
     });
 
-    slider.noUiSlider.on("set", function () { 
-        configuration.publishedSince = Math.round(slider.noUiSlider.get());
+    $("input[name=language]:radio").change(async function () {
+        configuration.languageInput = $(this).val();
+
+        if ($(this).val() != "auto") {
+            configuration.language = $(this).val();
+            $('#language-input-auto').empty();
+        } else {
+            await autoLanguage();
+        }
+
         setLocalStorage(configuration);
-        clearOverlays();
-        $("#rightSide").hide();
-        resetCities();
+    });
+}
+
+async function autoLanguage() {
+    await getLanguage();
+    $('#language-input-auto').text(configuration.language);
+}
+
+async function initDaysSincePublishedSettings() {
+    $('input[name=days-since-published]').val(configuration.publishedSince);
+    $('#days-since-published-input').text(configuration.publishedSince);
+    
+    
+    $('input[name=days-since-published]').on("input", async function () {
+        configuration.publishedSince = parseInt($(this).val());
+        $('#days-since-published-input').text($(this).val());
+
+        setLocalStorage(configuration);
     });
 }
 
 async function getLanguage() {
-    if (configuration.languageInput != "auto") {
-        configuration.language = configuration.languageInput;
-        setLocalStorage(configuration);
-    } else {
+    return await axios({
+        method: 'get',
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyAEzitfRh4g-BFpcT8aoQwpZL-FytTNqqQ`,
+    }).then(async function (response) {
+        if (response.data.status == "ZERO_RESULTS") {
+            configuration.language = "en"
+        } else if (_.contains(response.data.results[response.data.results.length - 1].types), "country") {
+            configuration.country = response.data.results[response.data.results.length - 1].formatted_address;
+            setLocalStorage(configuration);
             return await axios({
                 method: 'get',
-                url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyAEzitfRh4g-BFpcT8aoQwpZL-FytTNqqQ`,
-            }).then(async function (response) {
-                if (response.data.status == "ZERO_RESULTS") {
-                    configuration.language = "en"
-                } else if (_.contains(response.data.results[response.data.results.length - 1].types), "country") {
-                    configuration.country = response.data.results[response.data.results.length - 1].formatted_address;
-                    setLocalStorage(configuration);
-                    return await axios({
-                        method: 'get',
-                        url: "app/assets/json/countries.json"
-                    }).then(function (data) {
-                        configuration.language = _.findWhere(data.data, {name: configuration.country}).languages[0];
-                        setLocalStorage(configuration);
-                    });
-                }
+                url: "app/assets/json/countries.json"
+            }).then(function (data) {
+                configuration.language = _.findWhere(data.data, {name: configuration.country}).languages[0];
+                setLocalStorage(configuration);
             });
+        }
+    });
+}
 
+function getUserLocation() {
+    let promise = $.Deferred();
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            let pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            configuration.mapSettings.location.lat = pos.lat;
+            configuration.mapSettings.location.lng = pos.lng;
+            setLocalStorage(configuration);
+            return promise.resolve();
+        });
+    } else {
+        firstVisitGeolocationBlocked();
     }
+    return promise.promise();
 }
 
-function resetCities() {
-    clearOverlays();
-    google.maps.event.trigger(map, 'idle');
-    $("#rightSide").hide();
-    rightSideOpen = false;
+var optionsGeolocation = {
+    enableHighAccuracy: true,
+    timeout: 100000,
+    maximumAge: 0
+};
+
+function errorGeolocation(err) {
+    console.warn(`ERROR(${err.code}): ${err.message}`);
 }
+
+function firstVisitGeolocationBlocked() {
+    var location = prompt("Location: ");
+    alert("navigate to city");
+}
+
 this["JST"] = this["JST"] || {};
 
 this["JST"]["bottomSide"] = Handlebars.template({"1":function(container,depth0,helpers,partials,data) {
@@ -718,6 +541,12 @@ this["JST"]["bottomSideTitle"] = Handlebars.template({"compiler":[7,">= 4.0.0"],
     + "</h4>\n    </div>\n    <div class=\"col s2 valign-wrapper\">\n        <a onclick=\"closeRightBottom()\">\n            <i id=\"close-icon-bottomSide\" class=\"material-icons\">close</i>\n        </a>\n    </div>\n</div>\n<div id=\"bottomSideArticlesContainer\">\n</div>";
 },"useData":true});
 
+this["JST"]["customInfoWindow"] = Handlebars.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "<div>\n    <h4>"
+    + container.escapeExpression(container.lambda(depth0, depth0))
+    + "</h4>\n</div>";
+},"useData":true});
+
 this["JST"]["rightSide"] = Handlebars.template({"1":function(container,depth0,helpers,partials,data) {
     var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3=container.escapeExpression, alias4="function";
 
@@ -742,10 +571,6 @@ this["JST"]["rightSideTitle"] = Handlebars.template({"compiler":[7,">= 4.0.0"],"
     return "<div class=\"row\">\n    <div class=\"col s10\" id=\"city-name\">\n        <h4>"
     + container.escapeExpression(container.lambda(depth0, depth0))
     + "</h4>\n    </div>\n    <div class=\"col s2 valign-wrapper\">\n        <a onclick=\"closeRightBottom()\">\n            <i id=\"close-icon-rightSide\" class=\"material-icons\">close</i>\n        </a>\n    </div>\n</div>\n<div id=\"rightSideArticlesContainer\">\n</div>";
-},"useData":true});
-
-this["JST"]["settingsPanel"] = Handlebars.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
-    return "<ul class=\"collapsible\">\n    <li>\n        <div class=\"collapsible-header\"><i class=\"material-icons\">language</i>Language</div>\n            <div class=\"collapsible-body\">\n                <select id=\"language-selector\">\n                    <option value=\"auto\">Auto Detect</option>\n                    <option value=\"en\">English</option>\n                    <option value=\"es\">Spanish</option>\n                    <option value=\"de\">German</option>\n                    <option value=\"it\">Italian</option>\n                </select>\n            </div>\n        </div>\n    </li>\n    <li>\n        <div class=\"collapsible-header\"><i class=\"material-icons\">date_range</i>Days Since Published</div>\n            <div class=\"collapsible-body\">\n                <div id=\"date-slider\"></div>\n            </div>\n        </div>\n    </li>\n    <li>\n        <div class=\"collapsible-header\"><i class=\"material-icons\">sort</i>Sort By</div>\n            <div class=\"collapsible-body\">\n                <select id=\"sort-by-selector\">\n                    <option value=\"publishedAt\">Published At</option>\n                    <option value=\"relevancy\">Relevancy</option>\n                    <option value=\"popularity\">Popularity</option>\n                </select>\n            </div>\n        </div>        \n    </li>\n</ul>\n";
 },"useData":true});
 function renderTemplate(templateName, data, container) {
     if (!data) {

@@ -26,6 +26,12 @@ this["JST"]["bottomSideTitle"] = Handlebars.template({"compiler":[7,">= 4.0.0"],
     + "</h4>\n    </div>\n    <div class=\"col s2 valign-wrapper\">\n        <a onclick=\"closeRightBottom()\">\n            <i id=\"close-icon-bottomSide\" class=\"material-icons\">close</i>\n        </a>\n    </div>\n</div>\n<div id=\"bottomSideArticlesContainer\">\n</div>";
 },"useData":true});
 
+this["JST"]["customInfoWindow"] = Handlebars.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "<div>\n    <h4>"
+    + container.escapeExpression(container.lambda(depth0, depth0))
+    + "</h4>\n</div>";
+},"useData":true});
+
 this["JST"]["rightSide"] = Handlebars.template({"1":function(container,depth0,helpers,partials,data) {
     var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3=container.escapeExpression, alias4="function";
 
@@ -50,8 +56,4 @@ this["JST"]["rightSideTitle"] = Handlebars.template({"compiler":[7,">= 4.0.0"],"
     return "<div class=\"row\">\n    <div class=\"col s10\" id=\"city-name\">\n        <h4>"
     + container.escapeExpression(container.lambda(depth0, depth0))
     + "</h4>\n    </div>\n    <div class=\"col s2 valign-wrapper\">\n        <a onclick=\"closeRightBottom()\">\n            <i id=\"close-icon-rightSide\" class=\"material-icons\">close</i>\n        </a>\n    </div>\n</div>\n<div id=\"rightSideArticlesContainer\">\n</div>";
-},"useData":true});
-
-this["JST"]["settingsPanel"] = Handlebars.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
-    return "<ul class=\"collapsible\">\n    <li>\n        <div class=\"collapsible-header\"><i class=\"material-icons\">language</i>Language</div>\n            <div class=\"collapsible-body\">\n                <select id=\"language-selector\">\n                    <option value=\"auto\">Auto Detect</option>\n                    <option value=\"en\">English</option>\n                    <option value=\"es\">Spanish</option>\n                    <option value=\"de\">German</option>\n                    <option value=\"it\">Italian</option>\n                </select>\n            </div>\n        </div>\n    </li>\n    <li>\n        <div class=\"collapsible-header\"><i class=\"material-icons\">date_range</i>Days Since Published</div>\n            <div class=\"collapsible-body\">\n                <div id=\"date-slider\"></div>\n            </div>\n        </div>\n    </li>\n    <li>\n        <div class=\"collapsible-header\"><i class=\"material-icons\">sort</i>Sort By</div>\n            <div class=\"collapsible-body\">\n                <select id=\"sort-by-selector\">\n                    <option value=\"publishedAt\">Published At</option>\n                    <option value=\"relevancy\">Relevancy</option>\n                    <option value=\"popularity\">Popularity</option>\n                </select>\n            </div>\n        </div>        \n    </li>\n</ul>\n";
 },"useData":true});

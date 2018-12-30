@@ -1,6 +1,4 @@
 //libs css
-@import "node_modules/materialize-css/sass/materialize";
-@import "node_modules/materialize-css/extras/noUiSlider/nouislider";
 @import "searchbox";
 
 //custom css
@@ -9,8 +7,9 @@
 @import "rightside";
 @import "bottomside";
 @import "settingspanel";
+@import "customInfoWindow";
 
 body {
     margin: 0;
-    font-family: 'Raleway', sans-serif;
+    font-family: 'Courier New', sans-serif;
 }

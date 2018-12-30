@@ -1,28 +1,23 @@
-#settingsPanel {
-    top: 100px;
+#settings-container-desktop {
+    width: 264px;
+    background-color: white;
+    position: absolute;
     left: 25px;
-    position: absolute;
-    width: 300px;
-    z-index: 100;
+    bottom: 25px;
+    z-index: 1000;
+    padding: 0 20px 20px 20px;
 
-    .collapsible-body {
-        background-color: white;
+    #language-label {
+        display: flex;
+        justify-content: space-between;
+    }
+ 
+    #days-since-published {
+        display: flex;
+        justify-content: space-between;
     }
 
-    @media (max-width: 576px) {
-        top: 20vh !important;
-        left: 5vw;
-        width: 90vw !important;
+    .setting-input {
+        font-weight: bold;
     }
-}
-
-#mobileSettingsMenu {
-    position: absolute;
-    top: 10vh;
-    left: 5vw; 
-    height: 43px;
-    width: 43px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }

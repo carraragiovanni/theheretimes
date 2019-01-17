@@ -41,11 +41,6 @@ function initSettings() {
     initLayout();
 }
 
-function initMapComponents() {
-    initMap();
-    initAutocomplete();
-}
-
 function initLayout() {
     resizeScreen();
     
@@ -73,6 +68,7 @@ function resizeScreen() {
     
     setLocalStorage(configuration);
 }
+
 async function mapIdle() {
     let citiesToMap = [];
     
@@ -81,7 +77,6 @@ async function mapIdle() {
     }
     
     let existingCitiesInIDB = await getCitiesInBoundsinIDB(bounds);
-    
     
     existingCitiesInIDB.forEach(function (city) {
         if (city.lat < bounds.north && city.lat > bounds.south && city.lng < bounds.east && city.lng > bounds.west) {
@@ -94,7 +89,7 @@ async function mapIdle() {
     async function asyncCreation(newCities) {
         for await (const city of newCities) {
             let citytoAdd = createIDBObject(city);
-    
+            
             if (!_.findWhere(citiesToMap, {"geonameID": citytoAdd.geonamesID})) {
                 db.cities.put(citytoAdd);
                 citiesToMap.push(citytoAdd);
@@ -109,8 +104,6 @@ async function mapIdle() {
         citiesToMap = reduceSortCities(citiesToMap);
     }
 
-    console.log(citiesToMap);
-    
     citiesToMap.forEach(function (city) {
         addMarkerandInfoWindow(citiesToMap, city);
     });
@@ -187,13 +180,13 @@ Handlebars.registerHelper('extractDomain', function (url) {
 Handlebars.registerHelper('parsePublishetAtDate', function (publishedAt) {
     return moment(publishedAt).format("L");
 });
-function updateBoundsAndZoom(map) {
-    bounds = {
-        north: map.getBounds().ma.l,
-        south: map.getBounds().ma.j,
-        east: map.getBounds().fa.l,
-        west: map.getBounds().fa.j
-    }
+function updateBoundsAndZoom() {
+    // bounds = {
+    //     north: map.getBounds().ma.l,
+    //     south: map.getBounds().ma.j,
+    //     east: map.getBounds().fa.l,
+    //     west: map.getBounds().fa.j
+    // }
 
     configuration.mapSettings.location.lat = map.getCenter().lat();
     configuration.mapSettings.location.lng = map.getCenter().lng();
@@ -220,7 +213,7 @@ function initMap() {
     map = new google.maps.Map($('#map')[0], options);
     
     map.addListener('idle', function () {
-        updateBoundsAndZoom(map);
+        updateBoundsAndZoom();
 
         mapIdle();
     });
@@ -330,8 +323,8 @@ function initAutocomplete() {
 }
 
 async function newsAPI(city) {
-    let apiKeyNewsAPI = '22f8d579867948f991198b333b9a967d';
-    // let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
+    // let apiKeyNewsAPI = '22f8d579867948f991198b333b9a967d';
+    let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
     // let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
     
     let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
@@ -362,45 +355,56 @@ async function sideRightOpenAndParse(city) {
         bottomSideOpen = true;
         renderTemplate("bottomSideTitle", city.name, $("#bottomSide"));
     }
-    let fiveMins = moment().subtract(6, "hours");
-    let articleObj = null;
+
+    let sixHours = moment().subtract(6, "hours");
+
+
+    // if (city.articlesObj != 0) {
+    //     city.articlesObj.forEach(function (articleObj) {
+    //         if (articleObj.articlesLanguage == configuration.language) {
+    //             if (articleObj.publishedSince == configuration.publishedSince) {
+    //                 if ()
+    //             }
+    //         }
+    //     })
+    // }
     
-    if (city.articlesObj.length <= 0) {
-        city = await newsAPI(city);
-    } else {
-        for (let element of city.articlesObj) {
-            if (element.articlesLanguage == configuration.language && element.publishedSince == configuration.publishedSince && element.sortBy == configuration.sortBy && moment(element.articlesLastDownload).isAfter(fiveMins)) {
-                console.log("Article with these params exists");
-                articleObj = element;
-            } else {
-                city = await newsAPI(city);
-            }
-        };
-    }
+    // if (city.articlesObj.length <= 0) {
+    //     city = await newsAPI(city);
+    // } else {
+    //     for (let element of city.articlesObj) {
+    //         if (element.articlesLanguage == configuration.language && element.publishedSince == configuration.publishedSince && element.sortBy == configuration.sortBy && moment(element.articlesLastDownload).isAfter(fiveMins)) {
+    //             console.log("Article with these params exists");
+    //             articleObj = element;
+    //         }
+    //     };
+    // }
 
-    let articlesObj = city.articlesObj;
+    // let articlesObj = city.articlesObj;
 
-    let articlesLanguage = _.where(articlesObj, {articlesLanguage: configuration.language});
-    if (articlesLanguage.length == 1) {
-        articlesObj = articlesLanguage[0];
-    } else {
-        let articlesPublishedSince = _.where(articlesLanguage, {publishedSince: configuration.publishedSince});
-        if (articlesPublishedSince.length == 1) {
-            articlesObj = articlesPublishedSince[0];
-        } else {
-            let articlesSortBy = _.where(articlesPublishedSince, {sortBy: configuration.sortBy});
-            if (articlesSortBy.length == 1) {
-                articlesObj = articlesSortBy[0];
-            } else {
-                console.log("Looks like something went wrong");
-            }
-        }
-    }
-    if (configuration.device == "desktop") {
-        renderTemplate("rightSide", articlesObj, $("#rightSideArticlesContainer"));
-    } else if (configuration.device == "mobile") {
-        renderTemplate("bottomSide", articlesObj, $("#bottomSideArticlesContainer"));
-    }
+    // let articlesLanguage = _.where(articlesObj, {articlesLanguage: configuration.language});
+    // if (articlesLanguage.length == 1) {
+    //     articlesObj = articlesLanguage[0];
+    // } else {
+    //     let articlesPublishedSince = _.where(articlesLanguage, {publishedSince: configuration.publishedSince});
+    //     if (articlesPublishedSince.length == 1) {
+    //         articlesObj = articlesPublishedSince[0];
+    //     } else {
+    //         let articlesSortBy = _.where(articlesPublishedSince, {sortBy: configuration.sortBy});
+    //         if (articlesSortBy.length == 1) {
+    //             articlesObj = articlesSortBy[0];
+    //         } else {
+    //             console.log("Looks like something went wrong");
+    //         }
+    //     }
+    // }
+
+    // console.log(articlesObj);
+    // if (configuration.device == "desktop") {
+    //     renderTemplate("rightSide", articlesObj, $("#rightSideArticlesContainer"));
+    // } else if (configuration.device == "mobile") {
+    //     renderTemplate("bottomSide", articlesObj, $("#bottomSideArticlesContainer"));
+    // }
 }
 
 async function writeConfigurationFile() {
@@ -550,9 +554,9 @@ this["JST"]["customInfoWindow"] = Handlebars.template({"compiler":[7,">= 4.0.0"]
 this["JST"]["rightSide"] = Handlebars.template({"1":function(container,depth0,helpers,partials,data) {
     var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3=container.escapeExpression, alias4="function";
 
-  return "    <div class=\"article row\">\n        <div class=\"col s2 valign-wrapper\">\n            <img class=\"website-icon\" src=\"//logo.clearbit.com/"
+  return "    <div class=\"article row\">\n        <img class=\"website-icon\" src=\"//logo.clearbit.com/"
     + alias3((helpers.extractDomain || (depth0 && depth0.extractDomain) || alias2).call(alias1,(depth0 != null ? depth0.url : depth0),{"name":"extractDomain","hash":{},"data":data}))
-    + "\">\n        </div>\n        <div class=\"col s10\">\n            <a href=\""
+    + "\">\n        <div class=\"col s10\">\n            <a href=\""
     + alias3(((helper = (helper = helpers.url || (depth0 != null ? depth0.url : depth0)) != null ? helper : alias2),(typeof helper === alias4 ? helper.call(alias1,{"name":"url","hash":{},"data":data}) : helper)))
     + "\">"
     + alias3(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias4 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
@@ -568,9 +572,9 @@ this["JST"]["rightSide"] = Handlebars.template({"1":function(container,depth0,he
 },"useData":true});
 
 this["JST"]["rightSideTitle"] = Handlebars.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
-    return "<div class=\"row\">\n    <div class=\"col s10\" id=\"city-name\">\n        <h4>"
+    return "<div class=\"row\">\n    <div class=\"flexbox right-side-title\">\n        <div id=\"city-name\">\n            <h4>"
     + container.escapeExpression(container.lambda(depth0, depth0))
-    + "</h4>\n    </div>\n    <div class=\"col s2 valign-wrapper\">\n        <a onclick=\"closeRightBottom()\">\n            <i id=\"close-icon-rightSide\" class=\"material-icons\">close</i>\n        </a>\n    </div>\n</div>\n<div id=\"rightSideArticlesContainer\">\n</div>";
+    + "</h4>\n        </div>\n        <a class=\"close-icon\" onclick=\"closeRightBottom()\">x</a>\n    </div>\n</div>\n\n<div id=\"rightSideArticlesContainer\">\n</div>";
 },"useData":true});
 function renderTemplate(templateName, data, container) {
     if (!data) {
@@ -583,5 +587,6 @@ function renderTemplate(templateName, data, container) {
 }
 
 function closeRightBottom() {
-    $(".articlesContainer").hide();
+    $("#rightSide").hide();
+    $("#bottomSide").hide();
 }

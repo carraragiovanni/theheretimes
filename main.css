@@ -83,9 +83,10 @@
   right: 0;
   position: absolute;
   display: none; }
-  #rightSide #city-name {
-    padding: 20px;
-    height: 15vh; }
+  #rightSide .right-side-title {
+    margin: 25px; }
+    #rightSide .right-side-title .close-icon {
+      cursor: pointer; }
   #rightSide #close-icon-rightSide {
     position: absolute;
     top: 20px;
@@ -168,5 +169,9 @@
 body {
   margin: 0;
   font-family: 'Courier New', sans-serif; }
+
+.flexbox {
+  display: flex;
+  justify-content: space-between; }
 
 /*# sourceMappingURL=main.css.map */

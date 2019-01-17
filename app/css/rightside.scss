@@ -7,10 +7,14 @@
     position: absolute;
     display: none;
 
-    #city-name {
-        padding: 20px;
-        height: 15vh;
+    .right-side-title {
+        margin: 25px;
+        
+        .close-icon {
+            cursor: pointer;
+        }
     }
+    
 
     #close-icon-rightSide {
         position: absolute;

@@ -19,7 +19,7 @@ async function mapIdle() {
     async function asyncCreation(newCities) {
         for await (const city of newCities) {
             let citytoAdd = createIDBObject(city);
-    
+            
             if (!_.findWhere(citiesToMap, {"geonameID": citytoAdd.geonamesID})) {
                 db.cities.put(citytoAdd);
                 citiesToMap.push(citytoAdd);
@@ -34,8 +34,6 @@ async function mapIdle() {
         citiesToMap = reduceSortCities(citiesToMap);
     }
 
-    console.log(citiesToMap);
-    
     citiesToMap.forEach(function (city) {
         addMarkerandInfoWindow(citiesToMap, city);
     });

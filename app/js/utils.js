@@ -9,5 +9,6 @@ function renderTemplate(templateName, data, container) {
 }
 
 function closeRightBottom() {
-    $(".articlesContainer").hide();
+    $("#rightSide").hide();
+    $("#bottomSide").hide();
 }

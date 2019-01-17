@@ -1,9 +1,15 @@
-function updateBoundsAndZoom(map) {
+function initMapComponents() {
+    initMap();
+    initAutocomplete();
+}
+
+function updateBoundsAndZoom() {
+    // debugger;
     bounds = {
         north: map.getBounds().ma.l,
         south: map.getBounds().ma.j,
-        east: map.getBounds().fa.l,
-        west: map.getBounds().fa.j
+        east: map.getBounds().ga.l,
+        west: map.getBounds().ga.j
     }
 
     configuration.mapSettings.location.lat = map.getCenter().lat();
@@ -31,7 +37,7 @@ function initMap() {
     map = new google.maps.Map($('#map')[0], options);
     
     map.addListener('idle', function () {
-        updateBoundsAndZoom(map);
+        updateBoundsAndZoom();
 
         mapIdle();
     });

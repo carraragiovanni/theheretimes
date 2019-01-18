@@ -2,10 +2,14 @@
     width: 264px;
     background-color: white;
     position: absolute;
-    left: 25px;
-    bottom: 25px;
+    left: 5vw;
+    bottom: 5vw;
     z-index: 1000;
-    padding: 0 20px 20px 20px;
+    // padding: 20px 20px 20px 20px;
+
+    #settings-container-fields {
+        margin: 10px;
+    }
 
     #language-label {
         display: flex;

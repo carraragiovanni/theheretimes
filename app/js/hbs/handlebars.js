@@ -12,6 +12,9 @@ Handlebars.registerHelper('extractDomain', function (url) {
     return url.split("/")[2];
 });
 
-Handlebars.registerHelper('parsePublishetAtDate', function (publishedAt) {
-    return moment(publishedAt).format("L");
+Handlebars.registerHelper('parsePublishedAtDate', function (publishedAt) {
+    if (publishedAt != null) {
+
+        return moment(publishedAt).format("L");
+    }
 });

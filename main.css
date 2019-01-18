@@ -51,8 +51,7 @@
   #pac-input {
     top: 10vh !important;
     left: 0 !important;
-    padding: 0 11px 0 50px;
-    width: calc(90vw - 61px) !important;
+    width: calc(90vw - 80px) !important;
     margin-right: 5vw;
     margin-left: 5vw; } }
 
@@ -68,8 +67,7 @@
   z-index: 100; }
   @media (max-width: 576px) {
     #theHereTimesLogo {
-      width: 100vw;
-      padding: 0 5vw 0 5vw; } }
+      width: 60vw; } }
 
 #map {
   height: 100vh;
@@ -86,7 +84,8 @@
   #rightSide .right-side-title {
     margin: 25px; }
     #rightSide .right-side-title .close-icon {
-      cursor: pointer; }
+      cursor: pointer;
+      align-self: center; }
   #rightSide #close-icon-rightSide {
     position: absolute;
     top: 20px;
@@ -145,10 +144,11 @@
   width: 264px;
   background-color: white;
   position: absolute;
-  left: 25px;
-  bottom: 25px;
-  z-index: 1000;
-  padding: 0 20px 20px 20px; }
+  left: 5vw;
+  bottom: 5vw;
+  z-index: 1000; }
+  #settings-container-desktop #settings-container-fields {
+    margin: 10px; }
   #settings-container-desktop #language-label {
     display: flex;
     justify-content: space-between; }
@@ -165,6 +165,15 @@
   border-radius: 4px; }
   #customInfoWindowContainer h4 {
     margin: 20px; }
+
+.mobile-settings-container {
+  display: none;
+  width: 90vw !important; }
+
+#mobile-x {
+  position: absolute;
+  right: 5vw;
+  top: calc(10vh + 10px); }
 
 body {
   margin: 0;

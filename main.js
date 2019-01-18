@@ -5,10 +5,11 @@ let cities = [];
 let markers = [];
 let openCity = null;
 let rightSideOpen = false;
-let cityIndex = 0;
-let cityID = 0;
+let bottomSideOpen = false;
+let cityOpen;
 
 $(document).ready(async function () {
+    console.log("banana");
     if (JSON.parse(localStorage.getItem('configuration')) == null) {
         // FIRST VISIT
         
@@ -38,7 +39,13 @@ $(document).ready(async function () {
 function initSettings() {
     initLanguageSettings();
     initDaysSincePublishedSettings();
+    initSortBySettings();
     initLayout();
+}
+
+function initMapComponents() {
+    initMap();
+    initAutocomplete();
 }
 
 function initLayout() {
@@ -60,15 +67,33 @@ function initLayout() {
 function resizeScreen() {
     if (window.outerWidth <= 576) {
         configuration.device = "mobile";
+        configureMobileLayout();
     } else {
         configuration.device = "desktop";
     }
 
-    $("#theHereTimesLogo").css("left", (window.outerWidth / 2) - ($("#theHereTimesLogo").width() / 2));
+    $("#theHereTimesLogo").css("left", (window.innerWidth / 2) - ($("#theHereTimesLogo").width() / 2));
     
     setLocalStorage(configuration);
 }
 
+function configureMobileLayout() { 
+    let settingsOpen = false;
+    $("#settings-container-desktop").addClass("mobile-settings-container");
+
+    $(`<i id="mobile-x" class="large material-icons">settings</i>`).insertAfter("#settings-container-desktop");
+
+    $("#mobile-x").on("click", function () {
+        console.log(settingsOpen);
+        if (settingsOpen == false) {
+            $(".mobile-settings-container").css("display", "block");
+            settingsOpen = true;
+        } else {
+            $(".mobile-settings-container").css("display", "none");
+            settingsOpen = false;
+        }
+    });
+}
 async function mapIdle() {
     let citiesToMap = [];
     
@@ -77,6 +102,7 @@ async function mapIdle() {
     }
     
     let existingCitiesInIDB = await getCitiesInBoundsinIDB(bounds);
+    
     
     existingCitiesInIDB.forEach(function (city) {
         if (city.lat < bounds.north && city.lat > bounds.south && city.lng < bounds.east && city.lng > bounds.west) {
@@ -177,16 +203,25 @@ Handlebars.registerHelper('extractDomain', function (url) {
     return url.split("/")[2];
 });
 
-Handlebars.registerHelper('parsePublishetAtDate', function (publishedAt) {
-    return moment(publishedAt).format("L");
+Handlebars.registerHelper('parsePublishedAtDate', function (publishedAt) {
+    if (publishedAt != null) {
+
+        return moment(publishedAt).format("L");
+    }
 });
+function initMapComponents() {
+    initMap();
+    initAutocomplete();
+}
+
 function updateBoundsAndZoom() {
-    // bounds = {
-    //     north: map.getBounds().ma.l,
-    //     south: map.getBounds().ma.j,
-    //     east: map.getBounds().fa.l,
-    //     west: map.getBounds().fa.j
-    // }
+    // debugger;
+    bounds = {
+        north: map.getBounds().ma.l,
+        south: map.getBounds().ma.j,
+        east: map.getBounds().ga.l,
+        west: map.getBounds().ga.j
+    }
 
     configuration.mapSettings.location.lat = map.getCenter().lat();
     configuration.mapSettings.location.lng = map.getCenter().lng();
@@ -232,9 +267,14 @@ async function addMarkerandInfoWindow(cities, city) {
         map: map
     });
 
+
     marker.addListener('click', async function (marker) {
-        addCustomInfoWindow(city);
-        rightSideOpen = true;
+        if (configuration.device == "desktop") {
+            addCustomInfoWindow(city);
+            rightSideOpen = true;
+        } else {
+            bottomSideOpen = true;
+        }
         map.setCenter({
             lat: city.lat,
             lng: city.lng
@@ -323,13 +363,15 @@ function initAutocomplete() {
 }
 
 async function newsAPI(city) {
+    let promise = $.Deferred();
+
     // let apiKeyNewsAPI = '22f8d579867948f991198b333b9a967d';
-    let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
-    // let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
+    // let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
+    let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
     
     let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
 
-    return await axios({
+    await axios({
         method: 'get',
         url: `https://newsapi.org/v2/everything?q=${city.name}&language=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}&apiKey=${apiKeyNewsAPI}`,
     }).then(async function (response) {
@@ -340,12 +382,16 @@ async function newsAPI(city) {
             publishedSince: configuration.publishedSince,
             sortBy: configuration.sortBy
         };
-        city.articlesObj.push(articleObj);
-        await db.cities.put(city);
-        return city;
+        return promise.resolve(articleObj);
     });
+    return promise.promise();
 }
 async function sideRightOpenAndParse(city) {
+    if (!city) {
+        let cities = await getCitiesInBoundsinIDB();
+        city = _.findWhere(cities, {geonameId: cityOpen});
+    }
+
     if (configuration.device == "desktop") {
         $("#rightSide").show();
         rightSideOpen = true;
@@ -356,57 +402,53 @@ async function sideRightOpenAndParse(city) {
         renderTemplate("bottomSideTitle", city.name, $("#bottomSide"));
     }
 
-    let sixHours = moment().subtract(6, "hours");
+    console.log(city)
+    let newArticle = await newsAPI(city);
 
+    if (newArticle.articles.length == 0) {
+        newArticle.articles.push(
+            {
+                title: "Please expand your search, no results found",
+                publishedAt: null
+            });
+    }
+    debugger;
 
-    // if (city.articlesObj != 0) {
-    //     city.articlesObj.forEach(function (articleObj) {
-    //         if (articleObj.articlesLanguage == configuration.language) {
-    //             if (articleObj.publishedSince == configuration.publishedSince) {
-    //                 if ()
-    //             }
-    //         }
-    //     })
-    // }
-    
-    // if (city.articlesObj.length <= 0) {
-    //     city = await newsAPI(city);
-    // } else {
-    //     for (let element of city.articlesObj) {
-    //         if (element.articlesLanguage == configuration.language && element.publishedSince == configuration.publishedSince && element.sortBy == configuration.sortBy && moment(element.articlesLastDownload).isAfter(fiveMins)) {
-    //             console.log("Article with these params exists");
-    //             articleObj = element;
-    //         }
-    //     };
-    // }
+    if (configuration.device == "desktop") {
+        renderTemplate("rightSide", newArticle, $("#rightSideArticlesContainer"));
+    } else if (configuration.device == "mobile") {
+        renderTemplate("bottomSide", newArticle, $("#bottomSideArticlesContainer"));
+    }
 
-    // let articlesObj = city.articlesObj;
-
-    // let articlesLanguage = _.where(articlesObj, {articlesLanguage: configuration.language});
-    // if (articlesLanguage.length == 1) {
-    //     articlesObj = articlesLanguage[0];
-    // } else {
-    //     let articlesPublishedSince = _.where(articlesLanguage, {publishedSince: configuration.publishedSince});
-    //     if (articlesPublishedSince.length == 1) {
-    //         articlesObj = articlesPublishedSince[0];
-    //     } else {
-    //         let articlesSortBy = _.where(articlesPublishedSince, {sortBy: configuration.sortBy});
-    //         if (articlesSortBy.length == 1) {
-    //             articlesObj = articlesSortBy[0];
-    //         } else {
-    //             console.log("Looks like something went wrong");
-    //         }
-    //     }
-    // }
-
-    // console.log(articlesObj);
+    cityOpen = city.geonameId;
     // if (configuration.device == "desktop") {
-    //     renderTemplate("rightSide", articlesObj, $("#rightSideArticlesContainer"));
     // } else if (configuration.device == "mobile") {
-    //     renderTemplate("bottomSide", articlesObj, $("#bottomSideArticlesContainer"));
+    //     renderTemplate("bottomSide", newArticle.articles, $("#bottomSideArticlesContainer"));
+    // }
+
+    // let sixHours = moment().subtract(6, "hours");
+    // let sixSeconds = moment().subtract(6, "seconds");
+
+    // let languageInputArticles = _.filter(city.articlesObj, {
+    //     articlesLanguage: configuration.languageInput
+    // });
+    // let sortByArticles = _.filter(languageInputArticles, {
+    //     sortBy: configuration.sortBy
+    // });
+    // let publishedSinceArticles = _.filter(sortByArticles, {
+    //     publishedSince: configuration.publishedSince
+    // });
+    
+    // let sorted = _.sortBy(publishedSinceArticles, function (article) {return article.publishedSince});
+    // debugger;
+    // if (moment(sorted[0].articlesLastDownload).isBefore(sixSeconds)) {
+    //     let newArticle = await newsAPI(city);
+    //     city.articlesObj = newArticle;
+    //     await db.cities.put(city);
+    // } else {
+    //     console.log(sorted);
     // }
 }
-
 async function writeConfigurationFile() {
     return await axios.get("configuration.json").then(function (data) {
         localStorage.setItem('configuration', JSON.stringify(data.data));
@@ -440,6 +482,11 @@ async function initLanguageSettings() {
         }
 
         setLocalStorage(configuration);
+
+        if (rightSideOpen || bottomSideOpen) {
+            $("#rightSide").empty();
+            sideRightOpenAndParse();
+        }
     });
 }
 
@@ -458,13 +505,33 @@ async function initDaysSincePublishedSettings() {
         $('#days-since-published-input').text($(this).val());
 
         setLocalStorage(configuration);
+
+        if (rightSideOpen || bottomSideOpen) {
+            $("#rightSide").empty();
+            sideRightOpenAndParse();
+        }
+    });
+}
+
+async function initSortBySettings() {
+    $('select[name=sort-by]').val(configuration.sortBy);
+    
+    $('select[name=sort-by]').on("input", function () {
+        configuration.sortBy = $(this).val();
+
+        setLocalStorage(configuration);
+
+        if (rightSideOpen || bottomSideOpen) {
+            $("#rightSide").empty();
+            sideRightOpenAndParse();
+        }
     });
 }
 
 async function getLanguage() {
     return await axios({
         method: 'get',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyAEzitfRh4g-BFpcT8aoQwpZL-FytTNqqQ`,
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyBtlcIU7KqpPYOCCyESIB8ffBDMnm3mNeI`,
     }).then(async function (response) {
         if (response.data.status == "ZERO_RESULTS") {
             configuration.language = "en"
@@ -520,21 +587,19 @@ function firstVisitGeolocationBlocked() {
 this["JST"] = this["JST"] || {};
 
 this["JST"]["bottomSide"] = Handlebars.template({"1":function(container,depth0,helpers,partials,data) {
-    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3=container.escapeExpression, alias4="function";
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3="function", alias4=container.escapeExpression;
 
-  return "    <div class=\"article row\">\n        <div class=\"col s2 valign-wrapper\">\n            <img class=\"website-icon\" src=\"//logo.clearbit.com/"
-    + alias3((helpers.extractDomain || (depth0 && depth0.extractDomain) || alias2).call(alias1,(depth0 != null ? depth0.url : depth0),{"name":"extractDomain","hash":{},"data":data}))
-    + "\">\n        </div>\n        <div class=\"col s10\">\n            <a href=\""
-    + alias3(((helper = (helper = helpers.url || (depth0 != null ? depth0.url : depth0)) != null ? helper : alias2),(typeof helper === alias4 ? helper.call(alias1,{"name":"url","hash":{},"data":data}) : helper)))
-    + "\">"
-    + alias3(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias4 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
+  return "    <div class=\"article row\">\n            <a href=\""
+    + alias4(((helper = (helper = helpers.url || (depth0 != null ? depth0.url : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"url","hash":{},"data":data}) : helper)))
+    + "\" target=\"_blank\">"
+    + alias4(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
     + "</a>\n            <p>"
-    + alias3((helpers.parsePublishetAtDate || (depth0 && depth0.parsePublishetAtDate) || alias2).call(alias1,(depth0 != null ? depth0.publishedAt : depth0),{"name":"parsePublishetAtDate","hash":{},"data":data}))
-    + "</p>\n        </div>\n    </div>\n    <div class=\"divider\"></div>\n";
+    + alias4((helpers.parsePublishedAtDate || (depth0 && depth0.parsePublishedAtDate) || alias2).call(alias1,(depth0 != null ? depth0.publishedAt : depth0),{"name":"parsePublishedAtDate","hash":{},"data":data}))
+    + "</p>\n    </div>\n    <div class=\"divider\"></div>\n";
 },"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1;
 
-  return "<div id=\"articlesBottom\">\n"
+  return "<div id=\"articlesRight\">\n"
     + ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.articles : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "")
     + "</div>";
 },"useData":true});
@@ -552,16 +617,14 @@ this["JST"]["customInfoWindow"] = Handlebars.template({"compiler":[7,">= 4.0.0"]
 },"useData":true});
 
 this["JST"]["rightSide"] = Handlebars.template({"1":function(container,depth0,helpers,partials,data) {
-    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3=container.escapeExpression, alias4="function";
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3="function", alias4=container.escapeExpression;
 
-  return "    <div class=\"article row\">\n        <img class=\"website-icon\" src=\"//logo.clearbit.com/"
-    + alias3((helpers.extractDomain || (depth0 && depth0.extractDomain) || alias2).call(alias1,(depth0 != null ? depth0.url : depth0),{"name":"extractDomain","hash":{},"data":data}))
-    + "\">\n        <div class=\"col s10\">\n            <a href=\""
-    + alias3(((helper = (helper = helpers.url || (depth0 != null ? depth0.url : depth0)) != null ? helper : alias2),(typeof helper === alias4 ? helper.call(alias1,{"name":"url","hash":{},"data":data}) : helper)))
-    + "\">"
-    + alias3(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias4 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
+  return "    <div class=\"article row\">\n        <div class=\"col s10\">\n            <a href=\""
+    + alias4(((helper = (helper = helpers.url || (depth0 != null ? depth0.url : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"url","hash":{},"data":data}) : helper)))
+    + "\" target=\"_blank\">"
+    + alias4(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
     + "</a>\n            <p>"
-    + alias3((helpers.parsePublishetAtDate || (depth0 && depth0.parsePublishetAtDate) || alias2).call(alias1,(depth0 != null ? depth0.publishedAt : depth0),{"name":"parsePublishetAtDate","hash":{},"data":data}))
+    + alias4((helpers.parsePublishedAtDate || (depth0 && depth0.parsePublishedAtDate) || alias2).call(alias1,(depth0 != null ? depth0.publishedAt : depth0),{"name":"parsePublishedAtDate","hash":{},"data":data}))
     + "</p>\n        </div>\n    </div>\n    <div class=\"divider\"></div>\n";
 },"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1;

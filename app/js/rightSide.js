@@ -1,4 +1,9 @@
 async function sideRightOpenAndParse(city) {
+    if (!city) {
+        let cities = await getCitiesInBoundsinIDB();
+        city = _.findWhere(cities, {geonameId: cityOpen});
+    }
+
     if (configuration.device == "desktop") {
         $("#rightSide").show();
         rightSideOpen = true;
@@ -9,53 +14,50 @@ async function sideRightOpenAndParse(city) {
         renderTemplate("bottomSideTitle", city.name, $("#bottomSide"));
     }
 
-    let sixHours = moment().subtract(6, "hours");
+    console.log(city)
+    let newArticle = await newsAPI(city);
 
+    if (newArticle.articles.length == 0) {
+        newArticle.articles.push(
+            {
+                title: "Please expand your search, no results found",
+                publishedAt: null
+            });
+    }
+    debugger;
 
-    // if (city.articlesObj != 0) {
-    //     city.articlesObj.forEach(function (articleObj) {
-    //         if (articleObj.articlesLanguage == configuration.language) {
-    //             if (articleObj.publishedSince == configuration.publishedSince) {
-    //                 if ()
-    //             }
-    //         }
-    //     })
-    // }
-    
-    // if (city.articlesObj.length <= 0) {
-    //     city = await newsAPI(city);
-    // } else {
-    //     for (let element of city.articlesObj) {
-    //         if (element.articlesLanguage == configuration.language && element.publishedSince == configuration.publishedSince && element.sortBy == configuration.sortBy && moment(element.articlesLastDownload).isAfter(fiveMins)) {
-    //             console.log("Article with these params exists");
-    //             articleObj = element;
-    //         }
-    //     };
-    // }
+    if (configuration.device == "desktop") {
+        renderTemplate("rightSide", newArticle, $("#rightSideArticlesContainer"));
+    } else if (configuration.device == "mobile") {
+        renderTemplate("bottomSide", newArticle, $("#bottomSideArticlesContainer"));
+    }
 
-    // let articlesObj = city.articlesObj;
-
-    // let articlesLanguage = _.where(articlesObj, {articlesLanguage: configuration.language});
-    // if (articlesLanguage.length == 1) {
-    //     articlesObj = articlesLanguage[0];
-    // } else {
-    //     let articlesPublishedSince = _.where(articlesLanguage, {publishedSince: configuration.publishedSince});
-    //     if (articlesPublishedSince.length == 1) {
-    //         articlesObj = articlesPublishedSince[0];
-    //     } else {
-    //         let articlesSortBy = _.where(articlesPublishedSince, {sortBy: configuration.sortBy});
-    //         if (articlesSortBy.length == 1) {
-    //             articlesObj = articlesSortBy[0];
-    //         } else {
-    //             console.log("Looks like something went wrong");
-    //         }
-    //     }
-    // }
-
-    // console.log(articlesObj);
+    cityOpen = city.geonameId;
     // if (configuration.device == "desktop") {
-    //     renderTemplate("rightSide", articlesObj, $("#rightSideArticlesContainer"));
     // } else if (configuration.device == "mobile") {
-    //     renderTemplate("bottomSide", articlesObj, $("#bottomSideArticlesContainer"));
+    //     renderTemplate("bottomSide", newArticle.articles, $("#bottomSideArticlesContainer"));
+    // }
+
+    // let sixHours = moment().subtract(6, "hours");
+    // let sixSeconds = moment().subtract(6, "seconds");
+
+    // let languageInputArticles = _.filter(city.articlesObj, {
+    //     articlesLanguage: configuration.languageInput
+    // });
+    // let sortByArticles = _.filter(languageInputArticles, {
+    //     sortBy: configuration.sortBy
+    // });
+    // let publishedSinceArticles = _.filter(sortByArticles, {
+    //     publishedSince: configuration.publishedSince
+    // });
+    
+    // let sorted = _.sortBy(publishedSinceArticles, function (article) {return article.publishedSince});
+    // debugger;
+    // if (moment(sorted[0].articlesLastDownload).isBefore(sixSeconds)) {
+    //     let newArticle = await newsAPI(city);
+    //     city.articlesObj = newArticle;
+    //     await db.cities.put(city);
+    // } else {
+    //     console.log(sorted);
     // }
 }

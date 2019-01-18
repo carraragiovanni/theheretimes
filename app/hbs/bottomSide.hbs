@@ -1,13 +1,8 @@
-<div id="articlesBottom">
+<div id="articlesRight">
     {{#each articles}}
     <div class="article row">
-        <div class="col s2 valign-wrapper">
-            <img class="website-icon" src="//logo.clearbit.com/{{extractDomain url}}">
-        </div>
-        <div class="col s10">
-            <a href="{{url}}">{{title}}</a>
-            <p>{{parsePublishetAtDate publishedAt}}</p>
-        </div>
+            <a href="{{url}}" target="_blank">{{title}}</a>
+            <p>{{parsePublishedAtDate publishedAt}}</p>
     </div>
     <div class="divider"></div>
     {{/each}}

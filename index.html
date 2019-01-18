@@ -12,46 +12,60 @@
 </head>
 
 <body>
-    <div id="mainBodyContainer">
+    <div id="main-body-container">
         <img id="theHereTimesLogo" src="app/assets/logo/theHereTimesHoriz.svg" alt="">
         <input id="pac-input" class="controls" type="text" placeholder="Search Box">
         <div id="map"></div>
         <div id="settings-container-desktop">
-            <div id="language-label">
-                <p class="setting-input">Language</p>
-                <p id="language-input-auto"></p>
-            </div>
-            <div>
-                <input type="radio" name="language" value="auto">
-                <label for="auto">Auto</label>
-            </div>
-            
-            <div>
-                <input type="radio" name="language" value="en">
-                <label for="english">English</label>
-            </div>
-            <div>
-                <input type="radio" name="language" value="it">
-                <label for="italian">Italian</label>
-            </div>
+            <div id="settings-container-fields">
 
-            <div id="days-since-published">
-                <p class="setting-input">Days Since Published</p>
-                <p id="days-since-published-input"></p>
+                <div id="language-label">
+                    <p class="setting-input">Language</p>
+                    <p id="language-input-auto"></p>
+                </div>
+                <div>
+                    <input type="radio" name="language" value="auto">
+                    <label for="auto">Auto</label>
+                </div>
+                <div>
+                    <input type="radio" name="language" value="en">
+                    <label for="english">English</label>
+                </div>
+                <div>
+                    <input type="radio" name="language" value="it">
+                    <label for="italian">Italian</label>
+                </div>
+                <div>
+                    <input type="radio" name="language" value="de">
+                    <label for="german">German</label>
+                </div>
+                <div>
+                    <input type="radio" name="language" value="es">
+                    <label for="spanish">Spanish</label>
+                </div>
+                <div>
+                    <input type="radio" name="language" value="fr">
+                    <label for="french">French</label>
+                </div>
+                
+                <div id="days-since-published">
+                    <p class="setting-input">Days Since Published</p>
+                    <p id="days-since-published-input"></p>
+                </div>
+                <input type="range" name="days-since-published" min="1" max="30">
+                
+                <div id="sort-by">
+                    <p class="setting-input">Sort By</p>
+                    <select name="sort-by">
+                        <option value="relevancy">Relevancy</option>
+                        <option value="date-published">Date Published</option>
+                        <option value="popularity">Popularity</option>
+                        <option value="Social Shares" disabled="disabled">Social Shares (Coming Soon)</option>
+                    </select>
+                </div>
             </div>
-            <input type="range" name="days-since-published" min="1" max="30">
-            
-            <div id="sort-by">
-                <p class="setting-input">Sort By</p>
-                <select>
-                    <option value="relevancy">Relevancy</option>
-                    <option value="date-published">Date Published</option>
-                    <option value="popularity">Popularity</option>
-                    <option value="Social Shares" disabled="disabled">Social Shares (Coming Soon)</option>
-                </select>
             </div>
         </div>
-    </div>
 
     <div id="customInfoWindowContainer"></div>
     <div id="rightSide"></div>

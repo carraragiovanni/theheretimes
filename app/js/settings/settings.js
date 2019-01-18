@@ -16,6 +16,11 @@ async function initLanguageSettings() {
         }
 
         setLocalStorage(configuration);
+
+        if (rightSideOpen || bottomSideOpen) {
+            $("#rightSide").empty();
+            sideRightOpenAndParse();
+        }
     });
 }
 
@@ -34,13 +39,33 @@ async function initDaysSincePublishedSettings() {
         $('#days-since-published-input').text($(this).val());
 
         setLocalStorage(configuration);
+
+        if (rightSideOpen || bottomSideOpen) {
+            $("#rightSide").empty();
+            sideRightOpenAndParse();
+        }
+    });
+}
+
+async function initSortBySettings() {
+    $('select[name=sort-by]').val(configuration.sortBy);
+    
+    $('select[name=sort-by]').on("input", function () {
+        configuration.sortBy = $(this).val();
+
+        setLocalStorage(configuration);
+
+        if (rightSideOpen || bottomSideOpen) {
+            $("#rightSide").empty();
+            sideRightOpenAndParse();
+        }
     });
 }
 
 async function getLanguage() {
     return await axios({
         method: 'get',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyAEzitfRh4g-BFpcT8aoQwpZL-FytTNqqQ`,
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyBtlcIU7KqpPYOCCyESIB8ffBDMnm3mNeI`,
     }).then(async function (response) {
         if (response.data.status == "ZERO_RESULTS") {
             configuration.language = "en"

@@ -56,9 +56,14 @@ async function addMarkerandInfoWindow(cities, city) {
         map: map
     });
 
+
     marker.addListener('click', async function (marker) {
-        addCustomInfoWindow(city);
-        rightSideOpen = true;
+        if (configuration.device == "desktop") {
+            addCustomInfoWindow(city);
+            rightSideOpen = true;
+        } else {
+            bottomSideOpen = true;
+        }
         map.setCenter({
             lat: city.lat,
             lng: city.lng

@@ -70,12 +70,25 @@ module.exports = function(grunt) {
             }
         },
 
+        uglify: {
+            options: {
+                mangle: false
+            },
+            my_target: {
+                files: {
+                    'mainProd.js': ['main.js']
+                }
+            }
+        }
+
     });
     
     grunt.loadNpmTasks('grunt-sass');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-handlebars');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     
     grunt.registerTask('default', ['concat', 'handlebars', 'sass', 'watch']);
+    grunt.registerTask('prod', ['uglify']);
 };

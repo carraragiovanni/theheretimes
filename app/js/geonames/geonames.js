@@ -3,7 +3,7 @@ async function getCitiesInBoundsGeonames(numberCities) {
 
     return await axios({
         method: 'GET',
-        url: `http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`,
+        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`,
     }).then(function (response) {
         return response.data.geonames;
     });

@@ -1,12 +1,10 @@
 let configuration = {};
 let map;
 let bounds;
-let cities = [];
-let markers = [];
-let openCity = null;
+var markers = [];
+let openCityGeonameId;
 let rightSideOpen = false;
 let bottomSideOpen = false;
-let cityOpen;
 
 $(document).ready(async function () {
     if (JSON.parse(localStorage.getItem('configuration')) == null) {
@@ -83,7 +81,6 @@ function configureMobileLayout() {
     $(`<i id="mobile-x" class="large material-icons">settings</i>`).insertAfter("#settings-container-desktop");
 
     $("#mobile-x").on("click", function () {
-        console.log(settingsOpen);
         if (settingsOpen == false) {
             $(".mobile-settings-container").css("display", "block");
             settingsOpen = true;
@@ -93,6 +90,26 @@ function configureMobileLayout() {
         }
     });
 }
+function getCitiesInBounds(existingCitiesInIDB) {
+    let cities = [];
+    existingCitiesInIDB.forEach(function (city) {
+        if (city.lat < bounds.north && city.lat > bounds.south && city.lng < bounds.east && city.lng > bounds.west) {
+            cities.push(city);
+        }
+    });
+    return cities;
+}
+
+function getCitiesLanguage(existingCitiesInIDB) {
+    let cities = [];
+    existingCitiesInIDB.forEach(function (city) {
+        if (city.language == configuration.language) {
+            cities.push(city);
+        }
+    });
+    return cities;
+}
+
 async function mapIdle() {
     let citiesToMap = [];
     
@@ -100,63 +117,59 @@ async function mapIdle() {
         await autoLanguage();
     }
     
-    let existingCitiesInIDB = await getCitiesInBoundsinIDB(bounds);
+    let existingCitiesInIDB = await getCitiesIDB(bounds);
+    let citiesInIDBBounds = getCitiesInBounds(existingCitiesInIDB);
+    let citiesInIDBBoundsLanguage = getCitiesLanguage(citiesInIDBBounds);
     
-    
-    existingCitiesInIDB.forEach(function (city) {
-        if (city.lat < bounds.north && city.lat > bounds.south && city.lng < bounds.east && city.lng > bounds.west) {
-            if (city.language == configuration.language) {
-                citiesToMap.push(city);
-            }
-        }
-    });
-    
-    async function asyncCreation(newCities) {
-        for await (const city of newCities) {
-            let citytoAdd = createIDBObject(city);
-            
-            if (!_.findWhere(citiesToMap, {"geonameID": citytoAdd.geonamesID})) {
-                db.cities.put(citytoAdd);
-                citiesToMap.push(citytoAdd);
-            }
-        }
-    }
-    
-    if (citiesToMap.length < 3) {
-        let newCities = await getCitiesInBoundsGeonames(3 - citiesToMap.length);
-        await asyncCreation(newCities);
+    if (citiesInIDBBoundsLanguage.length >= 3) {
+        //CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB 
+        console.log("CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB");
+        citiesToMap = citiesInIDBBoundsLanguage.slice(0, 3);
     } else {
-        citiesToMap = reduceSortCities(citiesToMap);
+        //NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB
+        console.log("NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB");
+        citiesToMap = await getCitiesInBoundsGeonames();
+        citiesToMap.forEach(function (newCity) {
+            let citytoAdd = createIDBObject(newCity);
+            db.cities.add(citytoAdd);
+        });
     }
+
+    deleteMarkers();
 
     citiesToMap.forEach(function (city) {
-        addMarker(citiesToMap, city);
+        addMarker(city);
     });
 }
-
-function reduceSortCities(citiesToMap) {
-    citiesToMap = _.sortBy(citiesToMap, 'population').reverse();
-    citiesToMap = citiesToMap.slice(0, 3);
-    return citiesToMap;
-}
-
 const db = new Dexie('citiesDatabase');
 
 db.version(1).stores({
     cities: 'id++, city, geonamesId, language, articles, articlesLastDownload'
 });
 
-async function getCitiesInBoundsinIDB() {
+async function getCitiesIDB() {
     return await db.cities.toArray();
 }
-async function getCitiesInBoundsGeonames(numberCities) {
+async function getCitiesInBoundsGeonames() {
     let username = 'carraragiovanni';
+    let numberCities = 3;
 
     return await axios({
         method: 'GET',
         url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`,
     }).then(function (response) {
         return response.data.geonames;
+    });
+}
+
+async function getCityNewLanguage(geonameID, language) {
+    let username = 'carraragiovanni';
+
+    return await axios({
+        method: 'GET',
+        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/getJSON?geonameId=${geonameID}&lang=${language}&username=${username}`,
+    }).then(function (response) {
+        return response.data;
     });
 }
 
@@ -178,6 +191,7 @@ async function putIDBNewCity(city) {
     let cities = await db.cities.toArray();
     let existingCities = _.where(cities, {geonameId: city.geonameId});
     let languages = [];
+
     if (existingCities != null) {
         existingCities.forEach(async function (existingCityfromArray) {
             languages.push(existingCityfromArray.language);
@@ -251,13 +265,13 @@ function initMap() {
     });
 
     map.addListener('dragstart', function () {
-        if (cityOpen) {
+        if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").hide();
         }
     })
 }
 
-async function addMarker(cities, city) {
+async function addMarker(city) {
     let marker = new google.maps.Marker({
         position: {
             lat: city.lat,
@@ -266,6 +280,8 @@ async function addMarker(cities, city) {
         map: map
     });
 
+    markers.push(marker);
+
 
     marker.addListener('click', async function (marker) {
         if (configuration.device == "desktop") {
@@ -273,19 +289,9 @@ async function addMarker(cities, city) {
         } else {
             bottomSideOpen = true;
         }
-        map.setCenter({
-            lat: city.lat,
-            lng: city.lng
-        });
         sideRightOpenAndParse(city);
-        openCity = city.id;
+        openCityGeonameId = city.geonameId;
     });
-}
-
-function clearOverlays() {
-    for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    }
 }
 
 // Sets the map on all markers in the array.
@@ -356,7 +362,6 @@ function initAutocomplete() {
 
 async function newsAPI(city) {
     let promise = $.Deferred();
-
     // let apiKeyNewsAPI = '22f8d579867948f991198b333b9a967d';
     // let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
     let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
@@ -379,11 +384,6 @@ async function newsAPI(city) {
     return promise.promise();
 }
 async function sideRightOpenAndParse(city) {
-    if (!city) {
-        let cities = await getCitiesInBoundsinIDB();
-        city = _.findWhere(cities, {geonameId: cityOpen});
-    }
-
     if (configuration.device == "desktop") {
         $("#rightSide").show();
         rightSideOpen = true;
@@ -394,8 +394,7 @@ async function sideRightOpenAndParse(city) {
         renderTemplate("bottomSideTitle", city.name, $("#bottomSide"));
     }
 
-    console.log(city)
-    let newArticle = await newsAPI(city);
+    let newArticle = await getArticles(city);
 
     if (newArticle.articles.length == 0) {
         newArticle.articles.push(
@@ -412,33 +411,10 @@ async function sideRightOpenAndParse(city) {
     }
 
     cityOpen = city.geonameId;
-    // if (configuration.device == "desktop") {
-    // } else if (configuration.device == "mobile") {
-    //     renderTemplate("bottomSide", newArticle.articles, $("#bottomSideArticlesContainer"));
-    // }
+}
 
-    // let sixHours = moment().subtract(6, "hours");
-    // let sixSeconds = moment().subtract(6, "seconds");
-
-    // let languageInputArticles = _.filter(city.articlesObj, {
-    //     articlesLanguage: configuration.languageInput
-    // });
-    // let sortByArticles = _.filter(languageInputArticles, {
-    //     sortBy: configuration.sortBy
-    // });
-    // let publishedSinceArticles = _.filter(sortByArticles, {
-    //     publishedSince: configuration.publishedSince
-    // });
-    
-    // let sorted = _.sortBy(publishedSinceArticles, function (article) {return article.publishedSince});
-    // debugger;
-    // if (moment(sorted[0].articlesLastDownload).isBefore(sixSeconds)) {
-    //     let newArticle = await newsAPI(city);
-    //     city.articlesObj = newArticle;
-    //     await db.cities.put(city);
-    // } else {
-    //     console.log(sorted);
-    // }
+async function getArticles(city) {
+    return await newsAPI(city);
 }
 async function writeConfigurationFile() {
     return await axios.get("configuration.json").then(function (data) {
@@ -476,10 +452,23 @@ async function initLanguageSettings() {
 
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").empty();
-            sideRightOpenAndParse();
+            
+            let cities = await getCitiesIDB(bounds);
+            city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
+            let cityLanguage = _.findWhere(city, {language: configuration.language});
+            if (!cityLanguage) {
+                let cityNewLanguage = await getCityNewLanguage(city[0].geonameId, configuration.language);
+                let citytoAdd = createIDBObject(cityNewLanguage);
+                db.cities.add(citytoAdd);
+                sideRightOpenAndParse(citytoAdd);
+            }
+        } else {
+            mapIdle();
         }
     });
 }
+
+
 
 async function autoLanguage() {
     await getLanguage();
@@ -498,9 +487,10 @@ async function initDaysSincePublishedSettings() {
         setLocalStorage(configuration);
 
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").empty();
+            $("#rightSide").hide();
             sideRightOpenAndParse();
         }
+        mapIdle();
     });
 }
 

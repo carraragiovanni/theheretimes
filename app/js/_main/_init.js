@@ -1,12 +1,10 @@
 let configuration = {};
 let map;
 let bounds;
-let cities = [];
-let markers = [];
-let openCity = null;
+var markers = [];
+let openCityGeonameId;
 let rightSideOpen = false;
 let bottomSideOpen = false;
-let cityOpen;
 
 $(document).ready(async function () {
     if (JSON.parse(localStorage.getItem('configuration')) == null) {
@@ -83,7 +81,6 @@ function configureMobileLayout() {
     $(`<i id="mobile-x" class="large material-icons">settings</i>`).insertAfter("#settings-container-desktop");
 
     $("#mobile-x").on("click", function () {
-        console.log(settingsOpen);
         if (settingsOpen == false) {
             $(".mobile-settings-container").css("display", "block");
             settingsOpen = true;

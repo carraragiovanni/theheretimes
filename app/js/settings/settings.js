@@ -19,10 +19,23 @@ async function initLanguageSettings() {
 
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").empty();
-            sideRightOpenAndParse();
+            
+            let cities = await getCitiesIDB(bounds);
+            city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
+            let cityLanguage = _.findWhere(city, {language: configuration.language});
+            if (!cityLanguage) {
+                let cityNewLanguage = await getCityNewLanguage(city[0].geonameId, configuration.language);
+                let citytoAdd = createIDBObject(cityNewLanguage);
+                db.cities.add(citytoAdd);
+                sideRightOpenAndParse(citytoAdd);
+            }
+        } else {
+            mapIdle();
         }
     });
 }
+
+
 
 async function autoLanguage() {
     await getLanguage();
@@ -41,9 +54,10 @@ async function initDaysSincePublishedSettings() {
         setLocalStorage(configuration);
 
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").empty();
+            $("#rightSide").hide();
             sideRightOpenAndParse();
         }
+        mapIdle();
     });
 }
 

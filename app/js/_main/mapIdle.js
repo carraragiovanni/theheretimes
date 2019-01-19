@@ -1,3 +1,23 @@
+function getCitiesInBounds(existingCitiesInIDB) {
+    let cities = [];
+    existingCitiesInIDB.forEach(function (city) {
+        if (city.lat < bounds.north && city.lat > bounds.south && city.lng < bounds.east && city.lng > bounds.west) {
+            cities.push(city);
+        }
+    });
+    return cities;
+}
+
+function getCitiesLanguage(existingCitiesInIDB) {
+    let cities = [];
+    existingCitiesInIDB.forEach(function (city) {
+        if (city.language == configuration.language) {
+            cities.push(city);
+        }
+    });
+    return cities;
+}
+
 async function mapIdle() {
     let citiesToMap = [];
     
@@ -5,42 +25,27 @@ async function mapIdle() {
         await autoLanguage();
     }
     
-    let existingCitiesInIDB = await getCitiesInBoundsinIDB(bounds);
+    let existingCitiesInIDB = await getCitiesIDB(bounds);
+    let citiesInIDBBounds = getCitiesInBounds(existingCitiesInIDB);
+    let citiesInIDBBoundsLanguage = getCitiesLanguage(citiesInIDBBounds);
     
-    
-    existingCitiesInIDB.forEach(function (city) {
-        if (city.lat < bounds.north && city.lat > bounds.south && city.lng < bounds.east && city.lng > bounds.west) {
-            if (city.language == configuration.language) {
-                citiesToMap.push(city);
-            }
-        }
-    });
-    
-    async function asyncCreation(newCities) {
-        for await (const city of newCities) {
-            let citytoAdd = createIDBObject(city);
-            
-            if (!_.findWhere(citiesToMap, {"geonameID": citytoAdd.geonamesID})) {
-                db.cities.put(citytoAdd);
-                citiesToMap.push(citytoAdd);
-            }
-        }
-    }
-    
-    if (citiesToMap.length < 3) {
-        let newCities = await getCitiesInBoundsGeonames(3 - citiesToMap.length);
-        await asyncCreation(newCities);
+    if (citiesInIDBBoundsLanguage.length >= 3) {
+        //CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB 
+        console.log("CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB");
+        citiesToMap = citiesInIDBBoundsLanguage.slice(0, 3);
     } else {
-        citiesToMap = reduceSortCities(citiesToMap);
+        //NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB
+        console.log("NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB");
+        citiesToMap = await getCitiesInBoundsGeonames();
+        citiesToMap.forEach(function (newCity) {
+            let citytoAdd = createIDBObject(newCity);
+            db.cities.add(citytoAdd);
+        });
     }
+
+    deleteMarkers();
 
     citiesToMap.forEach(function (city) {
-        addMarker(citiesToMap, city);
+        addMarker(city);
     });
-}
-
-function reduceSortCities(citiesToMap) {
-    citiesToMap = _.sortBy(citiesToMap, 'population').reverse();
-    citiesToMap = citiesToMap.slice(0, 3);
-    return citiesToMap;
 }

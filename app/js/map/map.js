@@ -42,13 +42,13 @@ function initMap() {
     });
 
     map.addListener('dragstart', function () {
-        if (cityOpen) {
+        if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").hide();
         }
     })
 }
 
-async function addMarker(cities, city) {
+async function addMarker(city) {
     let marker = new google.maps.Marker({
         position: {
             lat: city.lat,
@@ -57,6 +57,8 @@ async function addMarker(cities, city) {
         map: map
     });
 
+    markers.push(marker);
+
 
     marker.addListener('click', async function (marker) {
         if (configuration.device == "desktop") {
@@ -64,19 +66,9 @@ async function addMarker(cities, city) {
         } else {
             bottomSideOpen = true;
         }
-        map.setCenter({
-            lat: city.lat,
-            lng: city.lng
-        });
         sideRightOpenAndParse(city);
-        openCity = city.id;
+        openCityGeonameId = city.geonameId;
     });
-}
-
-function clearOverlays() {
-    for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    }
 }
 
 // Sets the map on all markers in the array.

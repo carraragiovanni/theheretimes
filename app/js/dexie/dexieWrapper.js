@@ -4,6 +4,6 @@ db.version(1).stores({
     cities: 'id++, city, geonamesId, language, articles, articlesLastDownload'
 });
 
-async function getCitiesInBoundsinIDB() {
+async function getCitiesIDB() {
     return await db.cities.toArray();
 }

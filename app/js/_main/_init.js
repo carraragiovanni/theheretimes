@@ -9,7 +9,6 @@ let bottomSideOpen = false;
 let cityOpen;
 
 $(document).ready(async function () {
-    console.log("banana");
     if (JSON.parse(localStorage.getItem('configuration')) == null) {
         // FIRST VISIT
         

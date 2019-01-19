@@ -35,7 +35,7 @@ async function mapIdle() {
     }
 
     citiesToMap.forEach(function (city) {
-        addMarkerandInfoWindow(citiesToMap, city);
+        addMarker(citiesToMap, city);
     });
 }
 

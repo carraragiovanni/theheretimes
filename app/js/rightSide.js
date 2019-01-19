@@ -24,7 +24,6 @@ async function sideRightOpenAndParse(city) {
                 publishedAt: null
             });
     }
-    debugger;
 
     if (configuration.device == "desktop") {
         renderTemplate("rightSide", newArticle, $("#rightSideArticlesContainer"));

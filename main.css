@@ -9,9 +9,6 @@
 #infowindow-content {
   display: none; }
 
-#map #infowindow-content {
-  display: inline; }
-
 .pac-card {
   margin: 10px 10px 0 0;
   border-radius: 2px 0 0 2px;
@@ -141,11 +138,11 @@
       height: 48px; }
 
 #settings-container-desktop {
-  width: 264px;
+  width: 302px;
   background-color: white;
   position: absolute;
-  left: 5vw;
-  bottom: 5vw;
+  left: 25px;
+  bottom: 25px;
   z-index: 1000; }
   #settings-container-desktop #settings-container-fields {
     margin: 10px; }
@@ -157,14 +154,6 @@
     justify-content: space-between; }
   #settings-container-desktop .setting-input {
     font-weight: bold; }
-
-#customInfoWindowContainer {
-  position: absolute;
-  z-index: 1000;
-  background-color: white;
-  border-radius: 4px; }
-  #customInfoWindowContainer h4 {
-    margin: 20px; }
 
 .mobile-settings-container {
   display: none;

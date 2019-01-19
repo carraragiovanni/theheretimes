@@ -14,7 +14,6 @@ Handlebars.registerHelper('extractDomain', function (url) {
 
 Handlebars.registerHelper('parsePublishedAtDate', function (publishedAt) {
     if (publishedAt != null) {
-
         return moment(publishedAt).format("L");
     }
 });

@@ -4,7 +4,6 @@ function initMapComponents() {
 }
 
 function updateBoundsAndZoom() {
-    // debugger;
     bounds = {
         north: map.getBounds().ma.l,
         south: map.getBounds().ma.j,
@@ -43,11 +42,13 @@ function initMap() {
     });
 
     map.addListener('dragstart', function () {
-        $("#customInfoWindowContainer").empty();
+        if (cityOpen) {
+            $("#rightSide").hide();
+        }
     })
 }
 
-async function addMarkerandInfoWindow(cities, city) {
+async function addMarker(cities, city) {
     let marker = new google.maps.Marker({
         position: {
             lat: city.lat,
@@ -59,7 +60,6 @@ async function addMarkerandInfoWindow(cities, city) {
 
     marker.addListener('click', async function (marker) {
         if (configuration.device == "desktop") {
-            addCustomInfoWindow(city);
             rightSideOpen = true;
         } else {
             bottomSideOpen = true;
@@ -71,12 +71,6 @@ async function addMarkerandInfoWindow(cities, city) {
         sideRightOpenAndParse(city);
         openCity = city.id;
     });
-}
-
-function addCustomInfoWindow(city) {
-    renderTemplate("customInfoWindow", city.name, $("#customInfoWindowContainer"));
-    $("#customInfoWindowContainer").css("top", (((window.innerHeight) / 2) - ($("#customInfoWindowContainer").height() / 2) + (60)));
-    $("#customInfoWindowContainer").css("left", (((window.innerWidth) / 2) - ($("#customInfoWindowContainer").width() / 2)));
 }
 
 function clearOverlays() {

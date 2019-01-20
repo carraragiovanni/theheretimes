@@ -30,14 +30,11 @@ async function sideRightOpenAndParse(city) {
 
 async function getArticles(city) {
     let articles = await getArticlesIDB();
-    let exisitingArticles = _.filter(articles, {city_id: city.id});
-    let existingArticle = checkMatchingArticles(exisitingArticles);
-    console.log(exisitingArticle);
+    let cityArticles = _.filter(articles, {city_id: city.id});
+    let existingArticle = checkMatchingArticles(cityArticles);
     if (existingArticle != null) {
-        console.log("existingArticle");
         return exisitingArticle;
     } else {
-        console.log("newArticle");
         let newArticles = await newsAPI(city); 
         let idbArticle = createIDBArticles(newArticles, city);
         db.articles.put(idbArticle);

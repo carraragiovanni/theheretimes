@@ -38,6 +38,10 @@ function initAutocomplete() {
                 bounds.extend(place.geometry.location);
             }
         });
+        if (rightSideOpen || bottomSideOpen) {
+            $("#rightSide").hide();
+            $("#bottomSide").hide();
+        }
         map.fitBounds(bounds);
     });
 }

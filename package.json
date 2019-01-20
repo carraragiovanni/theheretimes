@@ -4,7 +4,8 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "connectAWS.js"
   },
   "author": "",
   "license": "ISC",
@@ -19,10 +20,14 @@
     "node-sass": "^4.11.0"
   },
   "dependencies": {
+    "aws-sdk": "^2.391.0",
     "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
     "dexie": "^2.0.4",
+    "ejs": "^2.6.1",
     "express": "^4.16.4",
     "handlebars": "^4.0.12",
+    "https": "^1.0.0",
     "idb": "^2.1.3",
     "jquery": "^3.3.1",
     "materialize-css": "^1.0.0",

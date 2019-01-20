@@ -5,6 +5,7 @@ var markers = [];
 let openCityGeonameId;
 let rightSideOpen = false;
 let bottomSideOpen = false;
+let settingsOpen = false;
 
 $(document).ready(async function () {
     if (JSON.parse(localStorage.getItem('configuration')) == null) {
@@ -75,7 +76,6 @@ function resizeScreen() {
 }
 
 function configureMobileLayout() { 
-    let settingsOpen = false;
     $("#settings-container-desktop").addClass("mobile-settings-container");
 
     $(`<i id="mobile-x" class="large material-icons">settings</i>`).insertAfter("#settings-container-desktop");
@@ -123,11 +123,9 @@ async function mapIdle() {
     
     if (citiesInIDBBoundsLanguage.length >= 3) {
         //CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB 
-        console.log("CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB");
         citiesToMap = citiesInIDBBoundsLanguage.slice(0, 3);
     } else {
         //NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB
-        console.log("NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB");
         citiesToMap = await getCitiesInBoundsGeonames();
         citiesToMap.forEach(function (newCity) {
             let citytoAdd = createIDBObject(newCity);
@@ -144,26 +142,31 @@ async function mapIdle() {
 const db = new Dexie('citiesDatabase');
 
 db.version(1).stores({
-    cities: 'id++, city, geonamesId, language, articles, articlesLastDownload'
+    cities: 'id++, city, geonamesId, language, articles, articlesLastDownload',
+    articles: 'id++, city_id, geonameId, publishedSince, sortBy, articles, language, downloadedAt'
 });
 
 async function getCitiesIDB() {
     return await db.cities.toArray();
 }
+async function getArticlesIDB() {
+    return await db.articles.toArray();
+}
 async function getCitiesInBoundsGeonames() {
     let username = 'carraragiovanni';
     let numberCities = 3;
-
+    
     return await axios({
         method: 'GET',
-        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`,
+        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`
     }).then(function (response) {
         return response.data.geonames;
     });
 }
 
 async function getCityNewLanguage(geonameID, language) {
-    let username = 'carraragiovanni';
+    // let username = 'carraragiovanni';
+    let username = 'giovannicarrara001';
 
     return await axios({
         method: 'GET',
@@ -185,21 +188,6 @@ function createIDBObject(geonamesCity) {
     }
 
     return city;
-}
-
-async function putIDBNewCity(city) {
-    let cities = await db.cities.toArray();
-    let existingCities = _.where(cities, {geonameId: city.geonameId});
-    let languages = [];
-
-    if (existingCities != null) {
-        existingCities.forEach(async function (existingCityfromArray) {
-            languages.push(existingCityfromArray.language);
-        });
-        if (!_.contains(languages, city.language)) {
-            db.cities.put(city);
-        }
-    }
 }
 
 function renderTemplate(templateName, data, container) {
@@ -267,6 +255,11 @@ function initMap() {
     map.addListener('dragstart', function () {
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").hide();
+            $("#bottomSide").hide();
+        }
+        if (settingsOpen) {
+            $(".mobile-settings-container").css("display", "none");
+            settingsOpen = false;
         }
     })
 }
@@ -283,11 +276,15 @@ async function addMarker(city) {
     markers.push(marker);
 
 
-    marker.addListener('click', async function (marker) {
+    marker.addListener('click', async function () {
         if (configuration.device == "desktop") {
             rightSideOpen = true;
         } else {
             bottomSideOpen = true;
+        }
+        if (settingsOpen) {
+            $(".mobile-settings-container").css("display", "none");
+            settingsOpen = false;
         }
         sideRightOpenAndParse(city);
         openCityGeonameId = city.geonameId;
@@ -356,6 +353,10 @@ function initAutocomplete() {
                 bounds.extend(place.geometry.location);
             }
         });
+        if (rightSideOpen || bottomSideOpen) {
+            $("#rightSide").hide();
+            $("#bottomSide").hide();
+        }
         map.fitBounds(bounds);
     });
 }
@@ -363,8 +364,8 @@ function initAutocomplete() {
 async function newsAPI(city) {
     let promise = $.Deferred();
     // let apiKeyNewsAPI = '22f8d579867948f991198b333b9a967d';
-    // let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
-    let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
+    let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
+    // let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
     
     let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
 
@@ -372,14 +373,7 @@ async function newsAPI(city) {
         method: 'get',
         url: `https://newsapi.org/v2/everything?q=${city.name}&language=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}&apiKey=${apiKeyNewsAPI}`,
     }).then(async function (response) {
-        articleObj = {
-            articles: response.data.articles,
-            articlesLanguage: configuration.language,
-            articlesLastDownload: moment().toISOString(),
-            publishedSince: configuration.publishedSince,
-            sortBy: configuration.sortBy
-        };
-        return promise.resolve(articleObj);
+        return promise.resolve(response.data);
     });
     return promise.promise();
 }
@@ -394,9 +388,9 @@ async function sideRightOpenAndParse(city) {
         renderTemplate("bottomSideTitle", city.name, $("#bottomSide"));
     }
 
-    let newArticle = await getArticles(city);
+    let idbArticle = await getArticles(city);
 
-    if (newArticle.articles.length == 0) {
+    if (idbArticle.articles.length == 0) {
         newArticle.articles.push(
             {
                 title: "Please expand your search, no results found",
@@ -405,16 +399,56 @@ async function sideRightOpenAndParse(city) {
     }
 
     if (configuration.device == "desktop") {
-        renderTemplate("rightSide", newArticle, $("#rightSideArticlesContainer"));
+        renderTemplate("rightSide", idbArticle.articles, $("#rightSideArticlesContainer"));
     } else if (configuration.device == "mobile") {
-        renderTemplate("bottomSide", newArticle, $("#bottomSideArticlesContainer"));
+        renderTemplate("bottomSide", idbArticle.articles, $("#bottomSideArticlesContainer"));
     }
 
     cityOpen = city.geonameId;
 }
 
 async function getArticles(city) {
-    return await newsAPI(city);
+    let articles = await getArticlesIDB();
+    let exisitingArticles = _.filter(articles, {city_id: city.id});
+    let existingArticle = checkMatchingArticles(exisitingArticles);
+    console.log(exisitingArticle);
+    if (existingArticle != null) {
+        console.log("existingArticle");
+        return exisitingArticle;
+    } else {
+        console.log("newArticle");
+        let newArticles = await newsAPI(city); 
+        let idbArticle = createIDBArticles(newArticles, city);
+        db.articles.put(idbArticle);
+        return idbArticle;
+    }
+}
+
+function checkMatchingArticles(exisitingArticles) {
+    for (exisitingArticle of exisitingArticles) {
+        if (exisitingArticle.language == configuration.language) {
+            if (exisitingArticle.sortBy == configuration.sortBy) {
+                if (exisitingArticle.publishedSince == configuration.publishedSince) {
+                    if (moment().subtract(15, 'second').isBefore(exisitingArticle.downloadedAt)) {
+                        return exisitingArticle;
+                    }
+                }
+            }
+        } 
+    }
+}
+
+function createIDBArticles(articles, city) {
+    let article = {
+        city_id: city.id,
+        geonameId: city.geonameId,
+        publishedSince: configuration.publishedSince,
+        sortBy: configuration.sortBy,
+        articles: articles,
+        language: configuration.language,
+        downloadedAt: moment().toISOString()
+    }
+    return article;
 }
 async function writeConfigurationFile() {
     return await axios.get("configuration.json").then(function (data) {
@@ -452,23 +486,25 @@ async function initLanguageSettings() {
 
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").empty();
+            $("#bottomSide").empty();
             
             let cities = await getCitiesIDB(bounds);
             city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
             let cityLanguage = _.findWhere(city, {language: configuration.language});
+            console.log(cityLanguage);
             if (!cityLanguage) {
                 let cityNewLanguage = await getCityNewLanguage(city[0].geonameId, configuration.language);
                 let citytoAdd = createIDBObject(cityNewLanguage);
                 db.cities.add(citytoAdd);
                 sideRightOpenAndParse(citytoAdd);
+            } else {
+                sideRightOpenAndParse(cityLanguage);
             }
         } else {
             mapIdle();
         }
     });
 }
-
-
 
 async function autoLanguage() {
     await getLanguage();
@@ -485,10 +521,14 @@ async function initDaysSincePublishedSettings() {
         $('#days-since-published-input').text($(this).val());
 
         setLocalStorage(configuration);
-
+        
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").hide();
-            sideRightOpenAndParse();
+            $("#rightSide").empty();
+            $("#bottomSide").empty();
+            
+            let cities = await getCitiesIDB(bounds);
+            let city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
+            sideRightOpenAndParse(city[0]);
         }
         mapIdle();
     });
@@ -497,14 +537,20 @@ async function initDaysSincePublishedSettings() {
 async function initSortBySettings() {
     $('select[name=sort-by]').val(configuration.sortBy);
     
-    $('select[name=sort-by]').on("input", function () {
+    $('select[name=sort-by]').on("input", async function () {
         configuration.sortBy = $(this).val();
 
         setLocalStorage(configuration);
 
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").empty();
-            sideRightOpenAndParse();
+            $("#bottomSide").empty();
+
+            let cities = await getCitiesIDB(bounds);
+            let city = _.filter(cities, function (city) {
+                return city.geonameId == openCityGeonameId
+            });
+            sideRightOpenAndParse(city[0]);
         }
     });
 }

@@ -5,6 +5,7 @@ var markers = [];
 let openCityGeonameId;
 let rightSideOpen = false;
 let bottomSideOpen = false;
+let settingsOpen = false;
 
 $(document).ready(async function () {
     if (JSON.parse(localStorage.getItem('configuration')) == null) {
@@ -75,7 +76,6 @@ function resizeScreen() {
 }
 
 function configureMobileLayout() { 
-    let settingsOpen = false;
     $("#settings-container-desktop").addClass("mobile-settings-container");
 
     $(`<i id="mobile-x" class="large material-icons">settings</i>`).insertAfter("#settings-container-desktop");

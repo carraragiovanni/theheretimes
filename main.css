@@ -157,7 +157,8 @@
 
 .mobile-settings-container {
   display: none;
-  width: 90vw !important; }
+  width: 90vw !important;
+  left: 5vw !important; }
 
 #mobile-x {
   position: absolute;

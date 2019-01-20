@@ -3,7 +3,7 @@ var mysql = require('mysql');
 var connection = mysql.createConnection({
     host: 'theheretimes.cdaqyzoo42nj.us-east-1.rds.amazonaws.com',
     user: 'admin',
-    password: 'Pirelli2014!?',
+    password: 'banana',
     port: '3306'
 });
 

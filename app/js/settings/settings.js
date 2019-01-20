@@ -19,23 +19,25 @@ async function initLanguageSettings() {
 
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").empty();
+            $("#bottomSide").empty();
             
             let cities = await getCitiesIDB(bounds);
             city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
             let cityLanguage = _.findWhere(city, {language: configuration.language});
+            console.log(cityLanguage);
             if (!cityLanguage) {
                 let cityNewLanguage = await getCityNewLanguage(city[0].geonameId, configuration.language);
                 let citytoAdd = createIDBObject(cityNewLanguage);
                 db.cities.add(citytoAdd);
                 sideRightOpenAndParse(citytoAdd);
+            } else {
+                sideRightOpenAndParse(cityLanguage);
             }
         } else {
             mapIdle();
         }
     });
 }
-
-
 
 async function autoLanguage() {
     await getLanguage();
@@ -52,10 +54,14 @@ async function initDaysSincePublishedSettings() {
         $('#days-since-published-input').text($(this).val());
 
         setLocalStorage(configuration);
-
+        
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").hide();
-            sideRightOpenAndParse();
+            $("#rightSide").empty();
+            $("#bottomSide").empty();
+            
+            let cities = await getCitiesIDB(bounds);
+            let city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
+            sideRightOpenAndParse(city[0]);
         }
         mapIdle();
     });
@@ -64,14 +70,20 @@ async function initDaysSincePublishedSettings() {
 async function initSortBySettings() {
     $('select[name=sort-by]').val(configuration.sortBy);
     
-    $('select[name=sort-by]').on("input", function () {
+    $('select[name=sort-by]').on("input", async function () {
         configuration.sortBy = $(this).val();
 
         setLocalStorage(configuration);
 
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").empty();
-            sideRightOpenAndParse();
+            $("#bottomSide").empty();
+
+            let cities = await getCitiesIDB(bounds);
+            let city = _.filter(cities, function (city) {
+                return city.geonameId == openCityGeonameId
+            });
+            sideRightOpenAndParse(city[0]);
         }
     });
 }

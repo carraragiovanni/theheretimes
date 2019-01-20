@@ -31,11 +31,9 @@ async function mapIdle() {
     
     if (citiesInIDBBoundsLanguage.length >= 3) {
         //CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB 
-        console.log("CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB");
         citiesToMap = citiesInIDBBoundsLanguage.slice(0, 3);
     } else {
         //NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB
-        console.log("NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB");
         citiesToMap = await getCitiesInBoundsGeonames();
         citiesToMap.forEach(function (newCity) {
             let citytoAdd = createIDBObject(newCity);

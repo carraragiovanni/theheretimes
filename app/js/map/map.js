@@ -44,6 +44,11 @@ function initMap() {
     map.addListener('dragstart', function () {
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").hide();
+            $("#bottomSide").hide();
+        }
+        if (settingsOpen) {
+            $(".mobile-settings-container").css("display", "none");
+            settingsOpen = false;
         }
     })
 }
@@ -60,11 +65,15 @@ async function addMarker(city) {
     markers.push(marker);
 
 
-    marker.addListener('click', async function (marker) {
+    marker.addListener('click', async function () {
         if (configuration.device == "desktop") {
             rightSideOpen = true;
         } else {
             bottomSideOpen = true;
+        }
+        if (settingsOpen) {
+            $(".mobile-settings-container").css("display", "none");
+            settingsOpen = false;
         }
         sideRightOpenAndParse(city);
         openCityGeonameId = city.geonameId;

@@ -4,7 +4,7 @@ async function getCitiesInBoundsGeonames() {
     
     return await axios({
         method: 'GET',
-        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`
+        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/citiesJSON?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&east=${boundsWithMargin.east}&west=${boundsWithMargin.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`
     }).then(function (response) {
         return response.data.geonames;
     });

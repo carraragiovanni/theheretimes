@@ -97,6 +97,9 @@ async function getLanguage() {
             configuration.language = "en"
         } else if (_.contains(response.data.results[response.data.results.length - 1].types), "country") {
             configuration.country = response.data.results[response.data.results.length - 1].formatted_address;
+            if (configuration.country.slice(configuration.country.length - 3) == "USA") {
+                configuration.country = "United States";
+            }
             setLocalStorage(configuration);
             return await axios({
                 method: 'get',

@@ -1,6 +1,7 @@
 let configuration = {};
 let map;
 let bounds;
+let boundsWithMargin;
 var markers = [];
 let openCityGeonameId;
 let rightSideOpen = false;
@@ -93,7 +94,7 @@ function configureMobileLayout() {
 function getCitiesInBounds(existingCitiesInIDB) {
     let cities = [];
     existingCitiesInIDB.forEach(function (city) {
-        if (city.lat < bounds.north && city.lat > bounds.south && city.lng < bounds.east && city.lng > bounds.west) {
+        if (city.lat < boundsWithMargin.north && city.lat > boundsWithMargin.south && city.lng < boundsWithMargin.east && city.lng > boundsWithMargin.west) {
             cities.push(city);
         }
     });
@@ -158,7 +159,7 @@ async function getCitiesInBoundsGeonames() {
     
     return await axios({
         method: 'GET',
-        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/citiesJSON?north=${bounds.north}&south=${bounds.south}&east=${bounds.east}&west=${bounds.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`
+        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/citiesJSON?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&east=${boundsWithMargin.east}&west=${boundsWithMargin.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`
     }).then(function (response) {
         return response.data.geonames;
     });
@@ -220,6 +221,12 @@ function updateBoundsAndZoom() {
         south: map.getBounds().ma.j,
         east: map.getBounds().ga.l,
         west: map.getBounds().ga.j
+    }
+    boundsWithMargin = {
+        north: bounds.north - (bounds.north - bounds.south) * 0.2,
+        south: bounds.south + (bounds.north - bounds.south) * 0.2,
+        east: bounds.east + (bounds.west - bounds.east) * 0.2,
+        west: bounds.west - (bounds.west - bounds.east) * 0.2
     }
 
     configuration.mapSettings.location.lat = map.getCenter().lat();
@@ -561,6 +568,9 @@ async function getLanguage() {
             configuration.language = "en"
         } else if (_.contains(response.data.results[response.data.results.length - 1].types), "country") {
             configuration.country = response.data.results[response.data.results.length - 1].formatted_address;
+            if (configuration.country.slice(configuration.country.length - 3) == "USA") {
+                configuration.country = "United States";
+            }
             setLocalStorage(configuration);
             return await axios({
                 method: 'get',

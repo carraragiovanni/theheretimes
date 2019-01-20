@@ -1,7 +1,7 @@
 function getCitiesInBounds(existingCitiesInIDB) {
     let cities = [];
     existingCitiesInIDB.forEach(function (city) {
-        if (city.lat < bounds.north && city.lat > bounds.south && city.lng < bounds.east && city.lng > bounds.west) {
+        if (city.lat < boundsWithMargin.north && city.lat > boundsWithMargin.south && city.lng < boundsWithMargin.east && city.lng > boundsWithMargin.west) {
             cities.push(city);
         }
     });

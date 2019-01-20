@@ -1,6 +1,7 @@
 let configuration = {};
 let map;
 let bounds;
+let boundsWithMargin;
 var markers = [];
 let openCityGeonameId;
 let rightSideOpen = false;

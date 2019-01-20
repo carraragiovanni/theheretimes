@@ -10,6 +10,12 @@ function updateBoundsAndZoom() {
         east: map.getBounds().ga.l,
         west: map.getBounds().ga.j
     }
+    boundsWithMargin = {
+        north: bounds.north - (bounds.north - bounds.south) * 0.2,
+        south: bounds.south + (bounds.north - bounds.south) * 0.2,
+        east: bounds.east + (bounds.west - bounds.east) * 0.2,
+        west: bounds.west - (bounds.west - bounds.east) * 0.2
+    }
 
     configuration.mapSettings.location.lat = map.getCenter().lat();
     configuration.mapSettings.location.lng = map.getCenter().lng();

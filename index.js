@@ -1,10 +1,15 @@
-const express = require('express')
-const path = require('path')
-const PORT = process.env.PORT || 5000
+var express = require('express');
+var app = express();
+var path = require('path');
 
-express()
-    .use(express.static(path.join(__dirname, 'public')))
-    .set('views', path.join(__dirname, 'views'))
-    .set('view engine', 'ejs')
-    .get('/', (req, res) => res.render('pages/index'))
-    .listen(PORT, () => console.log(`Listening on ${ PORT }`))
+app.use(express.static(path.join(__dirname)));
+app.use("/styles", express.static(__dirname));
+app.use("/images", express.static(__dirname + '/images'));
+app.use("/scripts", express.static(__dirname + '/scripts'));
+
+// viewed at based directory http://localhost:8080/
+app.get('/', function (req, res) {
+    res.sendFile(path.join(__dirname + 'index.html'));
+});
+
+app.listen(process.env.PORT || 8082);

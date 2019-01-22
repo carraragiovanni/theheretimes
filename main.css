@@ -165,6 +165,41 @@
   right: 5vw;
   top: calc(10vh + 10px); }
 
+#sign-up-log-in-button {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  padding: 5px; }
+
+#sign-up-log-in-container {
+  position: absolute;
+  top: 75px;
+  right: 50px;
+  background-color: white;
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  align-items: center; }
+  #sign-up-log-in-container #close-icon-sign-up-login {
+    position: absolute;
+    margin: 5px;
+    cursor: pointer;
+    top: 0;
+    right: 0; }
+  #sign-up-log-in-container #sign-up-log-in-buttons {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column; }
+    #sign-up-log-in-container #sign-up-log-in-buttons button {
+      margin: 30px; }
+  #sign-up-log-in-container #log-in-window button, #sign-up-log-in-container #log-in-window input, #sign-up-log-in-container #sign-up-window button, #sign-up-log-in-container #sign-up-window input {
+    margin: 10px; }
+
+#log-in-container {
+  position: absolute;
+  top: 0px;
+  left: 0px; }
+
 body {
   margin: 0;
   font-family: 'Courier New', sans-serif; }
@@ -172,5 +207,9 @@ body {
 .flexbox {
   display: flex;
   justify-content: space-between; }
+
+.flexbox-center {
+  display: flex;
+  justify-content: center; }
 
 /*# sourceMappingURL=main.css.map */

@@ -69,18 +69,6 @@ module.exports = function(grunt) {
                 tasks: 'default'
             }
         },
-
-        uglify: {
-            options: {
-                mangle: false
-            },
-            my_target: {
-                files: {
-                    'mainProd.js': ['main.js']
-                }
-            }
-        }
-
     });
     
     grunt.loadNpmTasks('grunt-sass');
@@ -90,5 +78,4 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     
     grunt.registerTask('default', ['concat', 'handlebars', 'sass', 'watch']);
-    grunt.registerTask('prod', ['uglify']);
 };

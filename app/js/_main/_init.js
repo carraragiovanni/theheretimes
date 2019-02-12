@@ -39,16 +39,7 @@ function initSettings() {
     initLanguageSettings();
     initDaysSincePublishedSettings();
     initSortBySettings();
-    // initSignUpLogIn();
     initLayout();
-    // initFireBaseApp();
-}
-
-function initSignUpLogIn() {
-    $("#sign-up-log-in-button").click(function() {
-        renderTemplate("signInUpMain", null, $("#sign-up-log-in-container"));
-        signUpLogInEventListeners();
-    })
 }
 
 function initMapComponents() {

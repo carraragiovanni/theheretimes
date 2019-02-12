@@ -39,7 +39,7 @@ function initSettings() {
     initLanguageSettings();
     initDaysSincePublishedSettings();
     initSortBySettings();
-    initSignUpLogIn();
+    // initSignUpLogIn();
     initLayout();
     // initFireBaseApp();
 }
@@ -161,100 +161,6 @@ async function getCitiesIDB() {
 }
 async function getArticlesIDB() {
     return await db.articles.toArray();
-}
-  var config = {
-      apiKey: "AIzaSyBUiJorku5B6k8q-TMuowERiAVvKM-8-CQ",
-      projectId: "the-here-times",
-  };
-  
-  firebase.initializeApp(config);
-/**
-* Handles the sign in button press.
-*/
-
-function signUpLogInEventListeners() {
-    $("button#log-in-selector").click(function() {
-        $("#sign-up-log-in-container").empty();
-        renderTemplate("logIn", null, $("#sign-up-log-in-container"));
-    });
-    $("button#sign-up-selector").click(function() {
-        $("#sign-up-log-in-container").empty();
-        renderTemplate("signUp", null, $("#sign-up-log-in-container"));
-        $("#sign-up").click(function () {
-            handleSignUp();
-        })
-    });
-}
-
-function toggleSignIn() {
-    
-        if (firebase.auth().currentUser) {
-            // [START signout]
-            firebase.auth().signOut();
-            // [END signout]
-        } else {
-            var email = $('#email').val();
-            var password = $('#password').val();
-            if (email.length < 4) {
-                alert('Please enter an email address.');
-                return;
-            }
-            if (password.length < 4) {
-                alert('Please enter a password.');
-                return;
-            }
-            // Sign in with email and pass.
-            // [START authwithemail]
-            firebase.auth().signInWithEmailAndPassword(email, password).catch(function (error) {
-                // Handle Errors here.
-                var errorCode = error.code;
-                var errorMessage = error.message;
-                // [START_EXCLUDE]
-                if (errorCode === 'auth/wrong-password') {
-                    alert('Wrong password.');
-                } else {
-                    alert(errorMessage);
-                }
-                console.log(error);
-                document.getElementById('quickstart-sign-in').disabled = false;
-                // [END_EXCLUDE]
-            });
-            // [END authwithemail]
-        }
-        document.getElementById('quickstart-sign-in').disabled = true;
-}
-
-function handleSignUp() {
-    var email = document.getElementById('email').value;
-    var password = document.getElementById('password').value;
-    if (email.length < 4) {
-        alert('Please enter an email address.');
-        return;
-    }
-    if (password.length < 4) {
-        alert('Please enter a password.');
-        return;
-    }
-    // Sign in with email and pass.
-    // [START createwithemail]
-    firebase.auth().createUserWithEmailAndPassword(email, password).catch(function (error) {
-        // Handle Errors here.
-        var errorCode = error.code;
-        var errorMessage = error.message;
-        // [START_EXCLUDE]
-        if (errorCode == 'auth/weak-password') {
-            alert('The password is too weak.');
-        } else {
-            alert(errorMessage);
-        }
-        console.log(error);
-        
-            });
-    // [END createwithemail]
-}
-
-function closeSignInWindow() {
-    $("#sign-up-log-in-container").empty();
 }
 async function getCitiesInBoundsGeonames() {
     let username = 'carraragiovanni';
@@ -663,9 +569,10 @@ async function initSortBySettings() {
 }
 
 async function getLanguage() {
+    console.log(map.center.lat());
     return await axios({
         method: 'get',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyBtlcIU7KqpPYOCCyESIB8ffBDMnm3mNeI`,
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyCaEJPL5d3HBoeHf43CQ23iyguQ7LDZXXU`,
     }).then(async function (response) {
         if (response.data.status == "ZERO_RESULTS") {
             configuration.language = "en"
@@ -720,6 +627,7 @@ function firstVisitGeolocationBlocked() {
     var location = prompt("Location: ");
     alert("navigate to city");
 }
+
 
 this["JST"] = this["JST"] || {};
 

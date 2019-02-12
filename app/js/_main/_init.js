@@ -39,7 +39,7 @@ function initSettings() {
     initLanguageSettings();
     initDaysSincePublishedSettings();
     initSortBySettings();
-    initSignUpLogIn();
+    // initSignUpLogIn();
     initLayout();
     // initFireBaseApp();
 }

@@ -89,9 +89,10 @@ async function initSortBySettings() {
 }
 
 async function getLanguage() {
+    console.log(map.center.lat());
     return await axios({
         method: 'get',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyBtlcIU7KqpPYOCCyESIB8ffBDMnm3mNeI`,
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyCaEJPL5d3HBoeHf43CQ23iyguQ7LDZXXU`,
     }).then(async function (response) {
         if (response.data.status == "ZERO_RESULTS") {
             configuration.language = "en"

@@ -7,8 +7,8 @@
     "sortBy": "publishedAt",
     "mapSettings": {
         "location": {
-            "lat": null,
-            "lng": null
+            "lat": 0,
+            "lng": 0
         },
         "zoom": 8
     }

@@ -32,10 +32,6 @@ module.exports = function(grunt) {
         concat: {
             customjs: {
                 src: 'app/js/**/*.js',
-                dest: 'main.js',
-            },
-            concatPublic: {
-                src: 'main.js',
                 dest: 'public/main.js',
             },
             libs: {
@@ -48,7 +44,7 @@ module.exports = function(grunt) {
                     'node_modules/webfontloader/webfontloader.js',
                     'node_modules/handlebars/dist/handlebars.js',
                 ],
-                dest: 'libs.js'
+                dest: 'public/libs.js'
             }
         },
 
@@ -74,13 +70,6 @@ module.exports = function(grunt) {
             }
         },
 
-        uglify: {
-            my_target: {
-                files: {
-                    'public/mainUgly.js': ['public/main.js']
-                }
-            }
-        },
     });
     
     grunt.loadNpmTasks('grunt-sass');
@@ -90,5 +79,4 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     
     grunt.registerTask('default', ['concat', 'handlebars', 'sass', 'watch']);
-    grunt.registerTask('public', ['concat:concatPublic', 'uglify']);
 };

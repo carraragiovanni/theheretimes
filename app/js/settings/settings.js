@@ -91,7 +91,7 @@ async function initSortBySettings() {
 async function getLanguage() {
     return await axios({
         method: 'get',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyCaEJPL5d3HBoeHf43CQ23iyguQ7LDZXXU`,
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyCo1UVUXi83YUE3yc8Xyrzml9Bfg-s1FpI`,
     }).then(async function (response) {
         if (response.data.status == "ZERO_RESULTS") {
             configuration.language = "en"
@@ -103,7 +103,7 @@ async function getLanguage() {
             setLocalStorage(configuration);
             return await axios({
                 method: 'get',
-                url: "app/assets/json/countries.json"
+                url: "countries.json"
             }).then(function (data) {
                 configuration.language = _.findWhere(data.data, {name: configuration.country}).languages[0];
                 setLocalStorage(configuration);

@@ -1,5 +1,5 @@
 async function writeConfigurationFile() {
-    return await axios.get("configuration.json").then(function (data) {
+    return await axios.get("json/configuration.json").then(function (data) {
         localStorage.setItem('configuration', JSON.stringify(data.data));
         configuration = data.data;
     });

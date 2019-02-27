@@ -103,7 +103,7 @@ async function getLanguage() {
             setLocalStorage(configuration);
             return await axios({
                 method: 'get',
-                url: "countries.json"
+                url: "json/countries.json"
             }).then(function (data) {
                 configuration.language = _.findWhere(data.data, {name: configuration.country}).languages[0];
                 setLocalStorage(configuration);

@@ -167,7 +167,7 @@ async function getCitiesInBoundsGeonames() {
 
 async function getCityNewLanguage(geonameID, language) {
     // let username = 'carraragiovanni';
-    let username = 'giovannicarrara001';
+    let username = 'carraragiovanni';
 
     return await axios({
         method: 'GET',
@@ -455,7 +455,7 @@ function createIDBArticles(articles, city) {
     return article;
 }
 async function writeConfigurationFile() {
-    return await axios.get("configuration.json").then(function (data) {
+    return await axios.get("json/configuration.json").then(function (data) {
         localStorage.setItem('configuration', JSON.stringify(data.data));
         configuration = data.data;
     });
@@ -574,7 +574,7 @@ async function getLanguage() {
             setLocalStorage(configuration);
             return await axios({
                 method: 'get',
-                url: "countries.json"
+                url: "json/countries.json"
             }).then(function (data) {
                 configuration.language = _.findWhere(data.data, {name: configuration.country}).languages[0];
                 setLocalStorage(configuration);

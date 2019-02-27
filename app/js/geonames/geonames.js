@@ -12,7 +12,7 @@ async function getCitiesInBoundsGeonames() {
 
 async function getCityNewLanguage(geonameID, language) {
     // let username = 'carraragiovanni';
-    let username = 'giovannicarrara001';
+    let username = 'carraragiovanni';
 
     return await axios({
         method: 'GET',

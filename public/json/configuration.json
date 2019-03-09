@@ -4,7 +4,7 @@
     "languageInput": "auto",
     "language": "en",
     "publishedSince": 7,
-    "sortBy": "publishedAt",
+    "sortBy": "relevancy",
     "mapSettings": {
         "location": {
             "lat": 0,

@@ -35,11 +35,19 @@ async function getArticles(city) {
     if (existingArticle != null) {
         return exisitingArticle;
     } else {
-        let newArticles = await newsAPI(city); 
-        let idbArticle = createIDBArticles(newArticles, city);
-        db.articles.put(idbArticle);
-        return idbArticle;
-    }
+        // let newArticles = await newsAPI(city); 
+        let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
+        return await axios({
+            method: 'GET',
+            url: `/articles?q=${city.name}&lang=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}`,
+        }).then(function (response) {
+            console.log(response.data.articles);
+            console.log(city)
+            let idbArticle = createIDBArticles(response.data.articles, city);
+            db.articles.put(idbArticle);
+            return idbArticle;
+            });
+        };
 }
 
 function checkMatchingArticles(exisitingArticles) {

@@ -38,10 +38,12 @@ async function mapIdle() {
         });
     } else {
         //NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB
+        // window.history.pushState('Object', 'Title', `cities/?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}`);
         return await axios({
             method: 'GET',
             url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}}`,
         }).then(function (response) {
+            // console.log(response);
             response.data.cities.geonames.forEach(function (newCity) {
                 let citytoAdd = createIDBObject(newCity);
                 db.cities.add(citytoAdd);

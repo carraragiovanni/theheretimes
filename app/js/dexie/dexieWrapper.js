@@ -11,3 +11,17 @@ async function getCitiesIDB() {
 async function getArticlesIDB() {
     return await db.articles.toArray();
 }
+
+function createIDBObject(geonamesCity) {
+    let city = {
+        name: geonamesCity.name,
+        lat: geonamesCity.lat,
+        lng: geonamesCity.lng,
+        geonameId: geonamesCity.geonameId,
+        language: configuration.language,
+        population: geonamesCity.population,
+        articlesObj: [],
+    }
+
+    return city;
+}

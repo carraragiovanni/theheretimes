@@ -26,10 +26,15 @@ async function initLanguageSettings() {
             let cityLanguage = _.findWhere(city, {language: configuration.language});
             console.log(cityLanguage);
             if (!cityLanguage) {
-                let cityNewLanguage = await getCityNewLanguage(city[0].geonameId, configuration.language);
-                let citytoAdd = createIDBObject(cityNewLanguage);
-                db.cities.add(citytoAdd);
-                sideRightOpenAndParse(citytoAdd);
+                return await axios({
+                    method: 'GET',
+                    url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}}`,
+                }).then(function (response) {
+                    console.log(response);
+                    let citytoAdd = createIDBObject(response);
+                    db.cities.add(citytoAdd);
+                    sideRightOpenAndParse(citytoAdd);
+                });
             } else {
                 sideRightOpenAndParse(cityLanguage);
             }

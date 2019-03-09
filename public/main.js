@@ -131,10 +131,12 @@ async function mapIdle() {
         });
     } else {
         //NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB
+        // window.history.pushState('Object', 'Title', `cities/?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}`);
         return await axios({
             method: 'GET',
             url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}}`,
         }).then(function (response) {
+            // console.log(response);
             response.data.cities.geonames.forEach(function (newCity) {
                 let citytoAdd = createIDBObject(newCity);
                 db.cities.add(citytoAdd);
@@ -156,17 +158,6 @@ async function getCitiesIDB() {
 }
 async function getArticlesIDB() {
     return await db.articles.toArray();
-}
-async function getCityNewLanguage(geonameID, language) {
-    // let username = 'carraragiovanni';
-    let username = 'carraragiovanni';
-
-    return await axios({
-        method: 'GET',
-        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/getJSON?geonameId=${geonameID}&lang=${language}&username=${username}`,
-    }).then(function (response) {
-        return response.data;
-    });
 }
 
 function createIDBObject(geonamesCity) {
@@ -363,8 +354,8 @@ function initAutocomplete() {
 async function newsAPI(city) {
     let promise = $.Deferred();
     // let apiKeyNewsAPI = '22f8d579867948f991198b333b9a967d';
-    let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
-    // let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
+    // let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
+    let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
     
     let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
 
@@ -413,11 +404,19 @@ async function getArticles(city) {
     if (existingArticle != null) {
         return exisitingArticle;
     } else {
-        let newArticles = await newsAPI(city); 
-        let idbArticle = createIDBArticles(newArticles, city);
-        db.articles.put(idbArticle);
-        return idbArticle;
-    }
+        // let newArticles = await newsAPI(city); 
+        let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
+        return await axios({
+            method: 'GET',
+            url: `/articles?q=${city.name}&lang=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}`,
+        }).then(function (response) {
+            console.log(response.data.articles);
+            console.log(city)
+            let idbArticle = createIDBArticles(response.data.articles, city);
+            db.articles.put(idbArticle);
+            return idbArticle;
+            });
+        };
 }
 
 function checkMatchingArticles(exisitingArticles) {
@@ -489,10 +488,15 @@ async function initLanguageSettings() {
             let cityLanguage = _.findWhere(city, {language: configuration.language});
             console.log(cityLanguage);
             if (!cityLanguage) {
-                let cityNewLanguage = await getCityNewLanguage(city[0].geonameId, configuration.language);
-                let citytoAdd = createIDBObject(cityNewLanguage);
-                db.cities.add(citytoAdd);
-                sideRightOpenAndParse(citytoAdd);
+                return await axios({
+                    method: 'GET',
+                    url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}}`,
+                }).then(function (response) {
+                    console.log(response);
+                    let citytoAdd = createIDBObject(response);
+                    db.cities.add(citytoAdd);
+                    sideRightOpenAndParse(citytoAdd);
+                });
             } else {
                 sideRightOpenAndParse(cityLanguage);
             }

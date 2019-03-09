@@ -1,0 +1,215 @@
+#description {
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300; }
+
+#infowindow-content .title {
+  font-weight: bold; }
+
+#infowindow-content {
+  display: none; }
+
+.pac-card {
+  margin: 10px 10px 0 0;
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  background-color: #fff;
+  font-family: Roboto; }
+
+#pac-container {
+  padding-bottom: 12px;
+  margin-right: 12px; }
+
+.pac-controls {
+  display: inline-block;
+  padding: 5px 11px; }
+
+.pac-controls label {
+  font-family: Roboto;
+  font-size: 13px;
+  font-weight: 300; }
+
+#pac-input {
+  background-color: #fff;
+  font-family: 'Courier New';
+  font-size: 18px;
+  font-weight: 300;
+  text-overflow: ellipsis;
+  padding: 10px;
+  position: absolute;
+  left: 25px !important;
+  top: 25px !important;
+  width: 278px; }
+
+@media (max-width: 576px) {
+  #pac-input {
+    top: 10vh !important;
+    left: 0 !important;
+    width: calc(90vw - 80px) !important;
+    margin-right: 5vw;
+    margin-left: 5vw; } }
+
+#title {
+  color: #fff;
+  background-color: #4d90fe;
+  font-size: 25px;
+  font-weight: 500;
+  padding: 6px 12px; }
+
+#theHereTimesLogo {
+  position: absolute;
+  z-index: 100; }
+  @media (max-width: 576px) {
+    #theHereTimesLogo {
+      width: 60vw; } }
+
+#map {
+  height: 100vh;
+  width: 100vw; }
+
+#rightSide {
+  background-color: white;
+  width: 35vw;
+  height: 100vh;
+  top: 0;
+  right: 0;
+  position: absolute;
+  display: none; }
+  #rightSide .right-side-title {
+    margin: 25px; }
+    #rightSide .right-side-title .close-icon {
+      cursor: pointer;
+      align-self: center; }
+  #rightSide #close-icon-rightSide {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    cursor: pointer;
+    color: black; }
+  #rightSide #articlesRight {
+    position: absolute;
+    bottom: 0px;
+    height: 85vh;
+    overflow: scroll; }
+  #rightSide .article {
+    display: flex;
+    padding: 20px;
+    margin-bottom: 0px; }
+    #rightSide .article a {
+      color: inherit; }
+    #rightSide .article .website-icon {
+      border-radius: 5px;
+      height: 48px; }
+
+#bottomSide {
+  background-color: white;
+  width: 100vw;
+  height: 50vh;
+  bottom: 0;
+  position: absolute;
+  display: none; }
+  #bottomSide #city-name {
+    padding: 20px;
+    height: 15vh; }
+  #bottomSide #close-icon-bottomSide {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    cursor: pointer;
+    color: black; }
+  #bottomSide #articles {
+    position: absolute;
+    bottom: 0px;
+    height: 85vh;
+    overflow: scroll; }
+  #bottomSide .article {
+    display: flex;
+    padding: 20px;
+    margin-bottom: 0px; }
+    #bottomSide .article a {
+      color: inherit; }
+    #bottomSide .article .website-icon {
+      border-radius: 5px;
+      height: 48px; }
+
+#settings-container-desktop {
+  width: 302px;
+  background-color: white;
+  position: absolute;
+  left: 25px;
+  bottom: 25px;
+  z-index: 1000; }
+  #settings-container-desktop #settings-container-fields {
+    margin: 10px; }
+  #settings-container-desktop #language-label {
+    display: flex;
+    justify-content: space-between; }
+  #settings-container-desktop #days-since-published {
+    display: flex;
+    justify-content: space-between; }
+  #settings-container-desktop .setting-input {
+    font-weight: bold; }
+
+.mobile-settings-container {
+  display: none;
+  width: 90vw !important;
+  left: 5vw !important; }
+
+#mobile-x {
+  position: absolute;
+  right: 5vw;
+  top: calc(10vh + 10px); }
+
+#sign-up-log-in-button {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  padding: 5px; }
+
+#sign-up-log-in-container {
+  position: absolute;
+  top: 75px;
+  right: 50px;
+  background-color: white;
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  align-items: center; }
+  #sign-up-log-in-container #close-icon-sign-up-login {
+    position: absolute;
+    margin: 5px;
+    cursor: pointer;
+    top: 0;
+    right: 0; }
+  #sign-up-log-in-container #sign-up-log-in-buttons {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column; }
+    #sign-up-log-in-container #sign-up-log-in-buttons button {
+      margin: 30px; }
+  #sign-up-log-in-container #log-in-window button, #sign-up-log-in-container #log-in-window input, #sign-up-log-in-container #sign-up-window button, #sign-up-log-in-container #sign-up-window input {
+    margin: 10px; }
+
+#log-in-container {
+  position: absolute;
+  top: 0px;
+  left: 0px; }
+
+body {
+  margin: 0;
+  font-family: 'Courier New', sans-serif; }
+
+.flexbox {
+  display: flex;
+  justify-content: space-between; }
+
+.flexbox-center {
+  display: flex;
+  justify-content: center; }
+
+/*# sourceMappingURL=main.css.map */

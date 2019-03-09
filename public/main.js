@@ -113,6 +113,7 @@ function getCitiesLanguage(existingCitiesInIDB) {
 
 async function mapIdle() {
     let citiesToMap = [];
+    deleteMarkers();
     
     if (configuration.languageInput == "auto") {
         await autoLanguage();
@@ -125,20 +126,23 @@ async function mapIdle() {
     if (citiesInIDBBoundsLanguage.length >= 3) {
         //CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB 
         citiesToMap = citiesInIDBBoundsLanguage.slice(0, 3);
+        citiesToMap.forEach(function (city) {
+            addMarker(city);
+        });
     } else {
         //NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB
-        citiesToMap = await getCitiesInBoundsGeonames();
-        citiesToMap.forEach(function (newCity) {
-            let citytoAdd = createIDBObject(newCity);
-            db.cities.add(citytoAdd);
+        return await axios({
+            method: 'GET',
+            url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}}`,
+        }).then(function (response) {
+            response.data.cities.geonames.forEach(function (newCity) {
+                let citytoAdd = createIDBObject(newCity);
+                db.cities.add(citytoAdd);
+
+                addMarker(newCity);
+            });
         });
     }
-
-    deleteMarkers();
-
-    citiesToMap.forEach(function (city) {
-        addMarker(city);
-    });
 }
 const db = new Dexie('citiesDatabase');
 
@@ -153,18 +157,6 @@ async function getCitiesIDB() {
 async function getArticlesIDB() {
     return await db.articles.toArray();
 }
-async function getCitiesInBoundsGeonames() {
-    let username = 'carraragiovanni';
-    let numberCities = 3;
-    
-    return await axios({
-        method: 'GET',
-        url: `https://cors-anywhere.herokuapp.com/http://api.geonames.org/citiesJSON?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&east=${boundsWithMargin.east}&west=${boundsWithMargin.west}&maxRows=${numberCities}&lang=${configuration.language}&username=${username}`
-    }).then(function (response) {
-        return response.data.geonames;
-    });
-}
-
 async function getCityNewLanguage(geonameID, language) {
     // let username = 'carraragiovanni';
     let username = 'carraragiovanni';

@@ -11,21 +11,29 @@ let settingsOpen = false;
 $(document).ready(async function () {
     if (JSON.parse(localStorage.getItem('configuration')) == null) {
         // FIRST VISIT
-        
         await writeConfigurationFile();
-        
+    
         initSettings();
 
-        navigator.permissions.query({
-            name: 'geolocation'
-        }).then(function (PermissionStatus) {
-            if (PermissionStatus.state == "granted") {
-                initMapComponents();
-            }
-            getUserLocation().then(function() {
-                initMapComponents();
-            });
-        });
+        initMapComponents();
+
+        async function success(position) {
+            let latitude = position.coords.latitude;
+            let longitude = position.coords.longitude;
+            console.log(latitude);
+            console.log(longitude);
+            map.setCenter(new google.maps.LatLng(latitude, longitude));
+        }
+    
+        function error() {
+            status.textContent = 'Unable to retrieve your location';
+        }
+
+        if (!navigator.geolocation) {
+            status.textContent = 'Geolocation is not supported by your browser';
+        } else {
+            navigator.geolocation.getCurrentPosition(success, error);
+        }
     } else {
         // NOT FIRST VISIT
         
@@ -351,22 +359,6 @@ function initAutocomplete() {
     });
 }
 
-async function newsAPI(city) {
-    let promise = $.Deferred();
-    // let apiKeyNewsAPI = '22f8d579867948f991198b333b9a967d';
-    // let apiKeyNewsAPI = 'ba114202f6c04b70a953c0624e570b51';
-    let apiKeyNewsAPI = 'cc3709c07a28493ba67d4baf15857ded';
-    
-    let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
-
-    await axios({
-        method: 'get',
-        url: `https://newsapi.org/v2/everything?q=${city.name}&language=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}&apiKey=${apiKeyNewsAPI}`,
-    }).then(async function (response) {
-        return promise.resolve(response.data);
-    });
-    return promise.promise();
-}
 async function sideRightOpenAndParse(city) {
     if (configuration.device == "desktop") {
         $("#rightSide").show();
@@ -410,8 +402,6 @@ async function getArticles(city) {
             method: 'GET',
             url: `/articles?q=${city.name}&lang=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}`,
         }).then(function (response) {
-            console.log(response.data.articles);
-            console.log(city)
             let idbArticle = createIDBArticles(response.data.articles, city);
             db.articles.put(idbArticle);
             return idbArticle;

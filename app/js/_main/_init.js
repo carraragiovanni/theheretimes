@@ -11,21 +11,29 @@ let settingsOpen = false;
 $(document).ready(async function () {
     if (JSON.parse(localStorage.getItem('configuration')) == null) {
         // FIRST VISIT
-        
         await writeConfigurationFile();
-        
+    
         initSettings();
 
-        navigator.permissions.query({
-            name: 'geolocation'
-        }).then(function (PermissionStatus) {
-            if (PermissionStatus.state == "granted") {
-                initMapComponents();
-            }
-            getUserLocation().then(function() {
-                initMapComponents();
-            });
-        });
+        initMapComponents();
+
+        async function success(position) {
+            let latitude = position.coords.latitude;
+            let longitude = position.coords.longitude;
+            console.log(latitude);
+            console.log(longitude);
+            map.setCenter(new google.maps.LatLng(latitude, longitude));
+        }
+    
+        function error() {
+            status.textContent = 'Unable to retrieve your location';
+        }
+
+        if (!navigator.geolocation) {
+            status.textContent = 'Geolocation is not supported by your browser';
+        } else {
+            navigator.geolocation.getCurrentPosition(success, error);
+        }
     } else {
         // NOT FIRST VISIT
         

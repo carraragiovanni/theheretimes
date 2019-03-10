@@ -41,8 +41,6 @@ async function getArticles(city) {
             method: 'GET',
             url: `/articles?q=${city.name}&lang=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}`,
         }).then(function (response) {
-            console.log(response.data.articles);
-            console.log(city)
             let idbArticle = createIDBArticles(response.data.articles, city);
             db.articles.put(idbArticle);
             return idbArticle;

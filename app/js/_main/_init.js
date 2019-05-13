@@ -48,6 +48,7 @@ function initSettings() {
     initDaysSincePublishedSettings();
     initSortBySettings();
     initLayout();
+    initUserLogin();
 }
 
 function initMapComponents() {

@@ -9,7 +9,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    'main.css': 'app/css/main.scss'
+                    'public/main.css': 'app/css/main.scss'
                 }
             }
         },
@@ -43,6 +43,7 @@ module.exports = function(grunt) {
                     'node_modules/axios/dist/axios.js',
                     'node_modules/webfontloader/webfontloader.js',
                     'node_modules/handlebars/dist/handlebars.js',
+                    'node_modules/firebase/firebase.js',
                 ],
                 dest: 'public/libs.js'
             }

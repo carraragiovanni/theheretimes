@@ -4,11 +4,12 @@ function initMapComponents() {
 }
 
 function updateBoundsAndZoom() {
+    // debugger;
     bounds = {
-        north: map.getBounds().ma.l,
-        south: map.getBounds().ma.j,
-        east: map.getBounds().ga.l,
-        west: map.getBounds().ga.j
+        north: map.getBounds().na.l,
+        south: map.getBounds().na.j,
+        east: map.getBounds().ia.l,
+        west: map.getBounds().ia.j
     }
     boundsWithMargin = {
         north: bounds.north - (bounds.north - bounds.south) * 0.2,

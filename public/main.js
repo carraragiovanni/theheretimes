@@ -212,8 +212,8 @@ function updateBoundsAndZoom() {
     bounds = {
         north: map.getBounds().na.l,
         south: map.getBounds().na.j,
-        east: map.getBounds().ia.l,
-        west: map.getBounds().ia.j
+        east: map.getBounds().ga.l,
+        west: map.getBounds().ga.j
     }
     boundsWithMargin = {
         north: bounds.north - (bounds.north - bounds.south) * 0.2,

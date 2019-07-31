@@ -3,6 +3,17 @@ var express = require('express');
 var app = express();
 app.use(express.static(__dirname + '/public'));
 
+app.route('/language').get(async function (req, res) {
+    return await axios({
+        method: 'GET',
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${req.query.lat},${req.query.lat}&key=AIzaSyCo1UVUXi83YUE3yc8Xyrzml9Bfg-s1FpI`
+    }).then(function (response) {
+        res.send({
+            language: response.data
+        });
+    });
+});
+
 app.route('/cities').get(async function (req, res) {
     return await axios({
         method: 'GET',

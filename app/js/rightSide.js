@@ -1,5 +1,5 @@
 async function sideRightOpenAndParse(city) {
-    if (configuration.device == "desktop") {
+    if (localStorage.getItem('device') == 'desktop') {
         $("#rightSide").show();
         rightSideOpen = true;
         renderTemplate("rightSideTitle", city.name, $("#rightSide"));
@@ -9,43 +9,26 @@ async function sideRightOpenAndParse(city) {
         renderTemplate("bottomSideTitle", city.name, $("#bottomSide"));
     }
 
-    let idbArticle = await getArticles(city);
-
-    if (idbArticle.articles.length == 0) {
-        newArticle.articles.push(
-            {
-                title: "Please expand your search, no results found",
-                publishedAt: null
-            });
+    let articles = await getArticles(city);
+    
+    if (localStorage.getItem('device') == "desktop") {
+        renderTemplate("rightSide", articles, $("#rightSideArticlesContainer"));
+    } else if (localStorage.getItem('device') == "mobile") {
+        renderTemplate("bottomSide", articles, $("#bottomSideArticlesContainer"));
     }
-
-    if (configuration.device == "desktop") {
-        renderTemplate("rightSide", idbArticle.articles, $("#rightSideArticlesContainer"));
-    } else if (configuration.device == "mobile") {
-        renderTemplate("bottomSide", idbArticle.articles, $("#bottomSideArticlesContainer"));
-    }
-
+    
     cityOpen = city.geonameId;
 }
 
 async function getArticles(city) {
-    let articles = await getArticlesIDB();
-    let cityArticles = _.filter(articles, {city_id: city.id});
-    let existingArticle = checkMatchingArticles(cityArticles);
-    if (existingArticle != null) {
-        return exisitingArticle;
-    } else {
-        // let newArticles = await newsAPI(city); 
-        let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
-        return await axios({
-            method: 'GET',
-            url: `/articles?q=${city.name}&lang=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}`,
-        }).then(function (response) {
-            let idbArticle = createIDBArticles(response.data.articles, city);
-            db.articles.put(idbArticle);
-            return idbArticle;
-            });
-        };
+    var dateFrom = moment().subtract(localStorage.getItem('daysSincePublished'), "days").format("YYYY-MM-DD");
+    console.log(dateFrom)
+    return await axios({
+        method: 'GET',
+        url: `/articles?q=${city.name}&lang=${localStorage.getItem('language')}&from=${dateFrom}&sortBy=${localStorage.getItem('sortBy')}`,
+    }).then(function (response) {
+        return response.data.articles.articles;
+    });
 }
 
 function checkMatchingArticles(exisitingArticles) {

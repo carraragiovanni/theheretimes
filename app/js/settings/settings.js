@@ -1,94 +1,46 @@
-async function initLanguageSettings() {
-    $("input[name=language]:radio").each(function(i, e) {
-        if (e.value == configuration.languageInput) {
-            $(this).attr("checked", true);
-        }
-    });
+function initLanguageSettings() {
+    $(`input:radio[name=language][value=${localStorage.getItem('languageSelection')}]`).attr('checked', true);
 
-    $("input[name=language]:radio").change(async function () {
-        configuration.languageInput = $(this).val();
+    $("input:radio[name=language]").change(async function () {
+        localStorage.setItem('language', $(this).val());
 
-        if ($(this).val() != "auto") {
-            configuration.language = $(this).val();
-            $('#language-input-auto').empty();
+        if ($(this).val() == 'auto') {
+            await getLanguage();
         } else {
-            await autoLanguage();
+            $('#language-input-auto').empty();
         }
-
-        setLocalStorage(configuration);
 
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").empty();
-            $("#bottomSide").empty();
-            
-            let cities = await getCitiesIDB(bounds);
-            city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
-            let cityLanguage = _.findWhere(city, {language: configuration.language});
-            console.log(cityLanguage);
-            if (!cityLanguage) {
-                return await axios({
-                    method: 'GET',
-                    url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}}`,
-                }).then(function (response) {
-                    console.log(response);
-                    let citytoAdd = createIDBObject(response);
-                    db.cities.add(citytoAdd);
-                    sideRightOpenAndParse(citytoAdd);
-                });
-            } else {
-                sideRightOpenAndParse(cityLanguage);
-            }
-        } else {
-            mapIdle();
+            $("#rightSide").hide();
+            $("#bottomSide").hide();
         }
     });
 }
 
-async function autoLanguage() {
-    await getLanguage();
-    $('#language-input-auto').text(configuration.language);
-}
+function initDaysSincePublishedSettings() {    
+    $('#days-since-published-input').text(localStorage.getItem('daysSincePublished'));
+    $('input[name=days-since-published]').val(localStorage.getItem('daysSincePublished'));
 
-async function initDaysSincePublishedSettings() {
-    $('input[name=days-since-published]').val(configuration.publishedSince);
-    $('#days-since-published-input').text(configuration.publishedSince);
-    
-    
-    $('input[name=days-since-published]').on("input", async function () {
-        configuration.publishedSince = parseInt($(this).val());
+    $('input[name=days-since-published]').on("input", function () {
+        localStorage.setItem('daysSincePublished', parseInt($(this).val()));
         $('#days-since-published-input').text($(this).val());
 
-        setLocalStorage(configuration);
-        
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").empty();
-            $("#bottomSide").empty();
-            
-            let cities = await getCitiesIDB(bounds);
-            let city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
-            sideRightOpenAndParse(city[0]);
+            $("#rightSide").hide();
+            $("#bottomSide").hide();
         }
-        mapIdle();
     });
 }
 
-async function initSortBySettings() {
-    $('select[name=sort-by]').val(configuration.sortBy);
-    
-    $('select[name=sort-by]').on("input", async function () {
-        configuration.sortBy = $(this).val();
+function initSortBySettings() {
+    $('select[name=sort-by]').val(localStorage.getItem('sortBy'));
 
-        setLocalStorage(configuration);
+    $('select[name=sort-by]').on("input",  function () {
+        localStorage.setItem('sortBy', $(this).val());
 
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").empty();
-            $("#bottomSide").empty();
-
-            let cities = await getCitiesIDB(bounds);
-            let city = _.filter(cities, function (city) {
-                return city.geonameId == openCityGeonameId
-            });
-            sideRightOpenAndParse(city[0]);
+            $("#rightSide").hide();
+            $("#bottomSide").hide();
         }
     });
 }
@@ -96,23 +48,27 @@ async function initSortBySettings() {
 async function getLanguage() {
     return await axios({
         method: 'get',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyCo1UVUXi83YUE3yc8Xyrzml9Bfg-s1FpI`,
+        url: `/language?lat=${map.center.lat()}&lng=${map.center.lng()}`,
     }).then(async function (response) {
-        if (response.data.status == "ZERO_RESULTS") {
-            configuration.language = "en"
-        } else if (_.contains(response.data.results[response.data.results.length - 1].types), "country") {
-            configuration.country = response.data.results[response.data.results.length - 1].formatted_address;
-            if (configuration.country.slice(configuration.country.length - 3) == "USA") {
-                configuration.country = "United States";
-            }
-            setLocalStorage(configuration);
-            return await axios({
-                method: 'get',
-                url: "json/countries.json"
-            }).then(function (data) {
-                configuration.language = _.findWhere(data.data, {name: configuration.country}).languages[0];
-                setLocalStorage(configuration);
-            });
-        }
+        debugger;
+
+
+
+        
+        // if (response.data.language.status == "ZERO_RESULTS") {
+        //     localStorage.setItem('language', 'en');
+        // } else if (_.contains(response.data.language.results[response.data.language.response.data.language.length - 1].types), "country") {
+        //     country = response.data.language.results[response.data.language.results.length - 1].formatted_address;
+        //     if (country.slice(country.length - 3) == "USA") {
+        //         country = "United States";
+        //     }
+        //     return await axios({
+        //         method: 'get',
+        //         url: "json/countries.json"
+        //     }).then(function (data) {
+        //         language = _.findWhere(data.data, {name: localStorage.getItem('language')}).languages[0];
+        //         localStorage.setItem('language', language);
+        //     });
+        // }
     });
 }

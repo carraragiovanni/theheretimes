@@ -1,5 +1,3 @@
-let configuration = {};
-let map;
 let bounds;
 let boundsWithMargin;
 var markers = [];
@@ -7,53 +5,38 @@ let openCityGeonameId;
 let rightSideOpen = false;
 let bottomSideOpen = false;
 let settingsOpen = false;
+let latitude = 0;
+let longitude = 0;
+let map;
+let language = 'en'
 
-$(document).ready(async function () {
-    if (JSON.parse(localStorage.getItem('configuration')) == null) {
-        // FIRST VISIT
-        await writeConfigurationFile();
-    
-        initSettings();
-
-        initMapComponents();
-
-        async function success(position) {
-            let latitude = position.coords.latitude;
-            let longitude = position.coords.longitude;
-            console.log(latitude);
-            console.log(longitude);
-            map.setCenter(new google.maps.LatLng(latitude, longitude));
-        }
-    
-        function error() {
-            status.textContent = 'Unable to retrieve your location';
-        }
-
-        if (!navigator.geolocation) {
-            status.textContent = 'Geolocation is not supported by your browser';
-        } else {
-            navigator.geolocation.getCurrentPosition(success, error);
-        }
-    } else {
-        // NOT FIRST VISIT
-        
-        getLocalStorage();
-        initSettings();
-        initMapComponents();
-    }
+$(document).ready(function () {
+    initMap();
+    initSettings();
+    initAutocomplete();
 });
 
+
 function initSettings() {
+    if (localStorage.getItem('visited') === 'true') {
+        //2+visit
+        $(`input:radio[name=language][value=${localStorage.getItem('language')}]`).attr('checked', true);
+        $('input[name=days-since-published]').val(localStorage.getItem('daysSincePublished'));
+        $('#days-since-published-input').text(localStorage.getItem('daysSincePublished'));
+        $('select[name=sort-by]').val(localStorage.getItem('sortBy'));
+    } else {
+        //firstvisit
+        localStorage.setItem('sortBy', 'relevancy');
+        localStorage.setItem('languageSelection', 'en');
+        localStorage.setItem('daysSincePublished', 12);
+    }
+
     initLanguageSettings();
     initDaysSincePublishedSettings();
     initSortBySettings();
     initLayout();
-    initUserLogin();
-}
 
-function initMapComponents() {
-    initMap();
-    initAutocomplete();
+    localStorage.setItem('visited', true);
 }
 
 function initLayout() {
@@ -74,22 +57,20 @@ function initLayout() {
 
 function resizeScreen() {
     if (window.outerWidth <= 576) {
-        configuration.device = "mobile";
+        localStorage.setItem('device', 'mobile');
         configureMobileLayout();
     } else {
-        configuration.device = "desktop";
+        localStorage.setItem('device', 'desktop');
     }
-
-    $("#theHereTimesLogo").css("left", (window.innerWidth / 2) - ($("#theHereTimesLogo").width() / 2));
     
-    setLocalStorage(configuration);
+    $("#theHereTimesLogo").css("left", (window.innerWidth / 2) - ($("#theHereTimesLogo").width() / 2));
 }
 
 function configureMobileLayout() { 
     $("#settings-container-desktop").addClass("mobile-settings-container");
-
+    
     $(`<i id="mobile-x" class="large material-icons">settings</i>`).insertAfter("#settings-container-desktop");
-
+    
     $("#mobile-x").on("click", function () {
         if (settingsOpen == false) {
             $(".mobile-settings-container").css("display", "block");
@@ -100,16 +81,6 @@ function configureMobileLayout() {
         }
     });
 }
-function getCitiesInBounds(existingCitiesInIDB) {
-    let cities = [];
-    existingCitiesInIDB.forEach(function (city) {
-        if (city.lat < boundsWithMargin.north && city.lat > boundsWithMargin.south && city.lng < boundsWithMargin.east && city.lng > boundsWithMargin.west) {
-            cities.push(city);
-        }
-    });
-    return cities;
-}
-
 function getCitiesLanguage(existingCitiesInIDB) {
     let cities = [];
     existingCitiesInIDB.forEach(function (city) {
@@ -121,66 +92,21 @@ function getCitiesLanguage(existingCitiesInIDB) {
 }
 
 async function mapIdle() {
-    let citiesToMap = [];
     deleteMarkers();
     
-    if (configuration.languageInput == "auto") {
-        await autoLanguage();
+    if ($('input[name=language]:checked').val() == "auto") {
+        await getLanguage();
+        $('#language-input-auto').text(localStorage.getItem('language'));
     }
-    
-    let existingCitiesInIDB = await getCitiesIDB(bounds);
-    let citiesInIDBBounds = getCitiesInBounds(existingCitiesInIDB);
-    let citiesInIDBBoundsLanguage = getCitiesLanguage(citiesInIDBBounds);
-    
-    if (citiesInIDBBoundsLanguage.length >= 3) {
-        //CITIES PRESENT IN BOUNDS WITH LANGUAGE IN IDB 
-        citiesToMap = citiesInIDBBoundsLanguage.slice(0, 3);
-        citiesToMap.forEach(function (city) {
-            addMarker(city);
+
+    return await axios({
+        method: 'GET',
+        url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${language}}`,
+}).then(function (response) {
+        response.data.cities.geonames.forEach(function (newCity) {
+            addMarker(newCity);
         });
-    } else {
-        //NO CITIES WITH IN BOUNDS WITH LANGUAGE IN IDB
-        // window.history.pushState('Object', 'Title', `cities/?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}`);
-        return await axios({
-            method: 'GET',
-            url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}}`,
-        }).then(function (response) {
-            // console.log(response);
-            response.data.cities.geonames.forEach(function (newCity) {
-                let citytoAdd = createIDBObject(newCity);
-                db.cities.add(citytoAdd);
-
-                addMarker(newCity);
-            });
-        });
-    }
-}
-const db = new Dexie('citiesDatabase');
-
-db.version(1).stores({
-    cities: 'id++, city, geonamesId, language, articles, articlesLastDownload',
-    articles: 'id++, city_id, geonameId, publishedSince, sortBy, articles, language, downloadedAt'
-});
-
-async function getCitiesIDB() {
-    return await db.cities.toArray();
-}
-async function getArticlesIDB() {
-    return await db.articles.toArray();
-}
-
-function createIDBObject(geonamesCity) {
-    let city = {
-        name: geonamesCity.name,
-        lat: geonamesCity.lat,
-        lng: geonamesCity.lng,
-        geonameId: geonamesCity.geonameId,
-        language: configuration.language,
-        population: geonamesCity.population,
-        articlesObj: [],
-    }
-
-    return city;
+    });
 }
 
 function renderTemplate(templateName, data, container) {
@@ -202,13 +128,40 @@ Handlebars.registerHelper('parsePublishedAtDate', function (publishedAt) {
         return moment(publishedAt).format("L");
     }
 });
-function initMapComponents() {
-    initMap();
-    initAutocomplete();
-}
+function initMap() {
+    let options = {
+        zoomControl: false,
+        mapTypeControl: false,
+        scaleControl: false,
+        streetViewControl: false,
+        rotateControl: false,
+        fullscreenControl: false,
+        center: {
+            lat: latitude,
+            lng: longitude
+        },
+        zoom: 8,
+    }
 
-function updateBoundsAndZoom() {
-    // debugger;
+    map = new google.maps.Map($('#map')[0], options);
+
+    map.addListener('idle', function () {
+        updateBounds();
+        mapIdle();
+    });
+    
+    map.addListener('dragstart', function () {
+        if (rightSideOpen || bottomSideOpen) {
+            $("#rightSide").hide();
+            $("#bottomSide").hide();
+        }
+        if (settingsOpen) {
+            $(".mobile-settings-container").css("display", "none");
+            settingsOpen = false;
+        }
+    });
+}
+function updateBounds() {
     bounds = {
         north: map.getBounds().na.l,
         south: map.getBounds().na.j,
@@ -221,47 +174,6 @@ function updateBoundsAndZoom() {
         east: bounds.east + (bounds.west - bounds.east) * 0.2,
         west: bounds.west - (bounds.west - bounds.east) * 0.2
     }
-
-    configuration.mapSettings.location.lat = map.getCenter().lat();
-    configuration.mapSettings.location.lng = map.getCenter().lng();
-    configuration.mapSettings.zoom = map.getZoom();
-
-    setLocalStorage(configuration);
-}
-
-function initMap() {  
-    let options = {
-        zoomControl: false,
-        mapTypeControl: false,
-        scaleControl: false,
-        streetViewControl: false,
-        rotateControl: false,
-        fullscreenControl: false,
-        center: {
-            lat: configuration.mapSettings.location.lat,
-            lng: configuration.mapSettings.location.lng
-        },
-        zoom: 8,
-    }
-    
-    map = new google.maps.Map($('#map')[0], options);
-    
-    map.addListener('idle', function () {
-        updateBoundsAndZoom();
-
-        mapIdle();
-    });
-
-    map.addListener('dragstart', function () {
-        if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").hide();
-            $("#bottomSide").hide();
-        }
-        if (settingsOpen) {
-            $(".mobile-settings-container").css("display", "none");
-            settingsOpen = false;
-        }
-    })
 }
 
 async function addMarker(city) {
@@ -272,12 +184,11 @@ async function addMarker(city) {
         },
         map: map
     });
-
+    
     markers.push(marker);
-
-
+    
     marker.addListener('click', async function () {
-        if (configuration.device == "desktop") {
+        if (localStorage.getItem('device') == 'desktop') {
             rightSideOpen = true;
         } else {
             bottomSideOpen = true;
@@ -301,11 +212,6 @@ function setMapOnAll(map) {
 // Removes the markers from the map, but keeps them in the array.
 function clearMarkers() {
     setMapOnAll(null);
-}
-
-// Shows any markers currently in the array.
-function showMarkers() {
-    setMapOnAll(map);
 }
 
 // Deletes all markers in the array by removing references to them.
@@ -362,7 +268,7 @@ function initAutocomplete() {
 }
 
 async function sideRightOpenAndParse(city) {
-    if (configuration.device == "desktop") {
+    if (localStorage.getItem('device') == 'desktop') {
         $("#rightSide").show();
         rightSideOpen = true;
         renderTemplate("rightSideTitle", city.name, $("#rightSide"));
@@ -372,43 +278,26 @@ async function sideRightOpenAndParse(city) {
         renderTemplate("bottomSideTitle", city.name, $("#bottomSide"));
     }
 
-    let idbArticle = await getArticles(city);
-
-    if (idbArticle.articles.length == 0) {
-        newArticle.articles.push(
-            {
-                title: "Please expand your search, no results found",
-                publishedAt: null
-            });
+    let articles = await getArticles(city);
+    
+    if (localStorage.getItem('device') == "desktop") {
+        renderTemplate("rightSide", articles, $("#rightSideArticlesContainer"));
+    } else if (localStorage.getItem('device') == "mobile") {
+        renderTemplate("bottomSide", articles, $("#bottomSideArticlesContainer"));
     }
-
-    if (configuration.device == "desktop") {
-        renderTemplate("rightSide", idbArticle.articles, $("#rightSideArticlesContainer"));
-    } else if (configuration.device == "mobile") {
-        renderTemplate("bottomSide", idbArticle.articles, $("#bottomSideArticlesContainer"));
-    }
-
+    
     cityOpen = city.geonameId;
 }
 
 async function getArticles(city) {
-    let articles = await getArticlesIDB();
-    let cityArticles = _.filter(articles, {city_id: city.id});
-    let existingArticle = checkMatchingArticles(cityArticles);
-    if (existingArticle != null) {
-        return exisitingArticle;
-    } else {
-        // let newArticles = await newsAPI(city); 
-        let datePublishedSince = moment().subtract(configuration.publishedSince, "days").toISOString();
-        return await axios({
-            method: 'GET',
-            url: `/articles?q=${city.name}&lang=${configuration.language}&from=${datePublishedSince}&sortBy=${configuration.sortBy}`,
-        }).then(function (response) {
-            let idbArticle = createIDBArticles(response.data.articles, city);
-            db.articles.put(idbArticle);
-            return idbArticle;
-            });
-        };
+    var dateFrom = moment().subtract(localStorage.getItem('daysSincePublished'), "days").format("YYYY-MM-DD");
+    console.log(dateFrom)
+    return await axios({
+        method: 'GET',
+        url: `/articles?q=${city.name}&lang=${localStorage.getItem('language')}&from=${dateFrom}&sortBy=${localStorage.getItem('sortBy')}`,
+    }).then(function (response) {
+        return response.data.articles.articles;
+    });
 }
 
 function checkMatchingArticles(exisitingArticles) {
@@ -437,112 +326,50 @@ function createIDBArticles(articles, city) {
     }
     return article;
 }
-async function writeConfigurationFile() {
-    return await axios.get("json/configuration.json").then(function (data) {
-        localStorage.setItem('configuration', JSON.stringify(data.data));
-        configuration = data.data;
-    });
-}
 
-function getLocalStorage() {
-    configuration = JSON.parse(localStorage.getItem('configuration'));
-}
+function initLanguageSettings() {
+    $(`input:radio[name=language][value=${localStorage.getItem('languageSelection')}]`).attr('checked', true);
 
-async function setLocalStorage(configuration) {
-    return await localStorage.setItem('configuration', JSON.stringify(configuration));
-}
+    $("input:radio[name=language]").change(async function () {
+        localStorage.setItem('language', $(this).val());
 
-async function initLanguageSettings() {
-    $("input[name=language]:radio").each(function(i, e) {
-        if (e.value == configuration.languageInput) {
-            $(this).attr("checked", true);
-        }
-    });
-
-    $("input[name=language]:radio").change(async function () {
-        configuration.languageInput = $(this).val();
-
-        if ($(this).val() != "auto") {
-            configuration.language = $(this).val();
-            $('#language-input-auto').empty();
+        if ($(this).val() == 'auto') {
+            await getLanguage();
         } else {
-            await autoLanguage();
+            $('#language-input-auto').empty();
         }
-
-        setLocalStorage(configuration);
 
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").empty();
-            $("#bottomSide").empty();
-            
-            let cities = await getCitiesIDB(bounds);
-            city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
-            let cityLanguage = _.findWhere(city, {language: configuration.language});
-            console.log(cityLanguage);
-            if (!cityLanguage) {
-                return await axios({
-                    method: 'GET',
-                    url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${configuration.language}}`,
-                }).then(function (response) {
-                    console.log(response);
-                    let citytoAdd = createIDBObject(response);
-                    db.cities.add(citytoAdd);
-                    sideRightOpenAndParse(citytoAdd);
-                });
-            } else {
-                sideRightOpenAndParse(cityLanguage);
-            }
-        } else {
-            mapIdle();
+            $("#rightSide").hide();
+            $("#bottomSide").hide();
         }
     });
 }
 
-async function autoLanguage() {
-    await getLanguage();
-    $('#language-input-auto').text(configuration.language);
-}
+function initDaysSincePublishedSettings() {    
+    $('#days-since-published-input').text(localStorage.getItem('daysSincePublished'));
+    $('input[name=days-since-published]').val(localStorage.getItem('daysSincePublished'));
 
-async function initDaysSincePublishedSettings() {
-    $('input[name=days-since-published]').val(configuration.publishedSince);
-    $('#days-since-published-input').text(configuration.publishedSince);
-    
-    
-    $('input[name=days-since-published]').on("input", async function () {
-        configuration.publishedSince = parseInt($(this).val());
+    $('input[name=days-since-published]').on("input", function () {
+        localStorage.setItem('daysSincePublished', parseInt($(this).val()));
         $('#days-since-published-input').text($(this).val());
 
-        setLocalStorage(configuration);
-        
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").empty();
-            $("#bottomSide").empty();
-            
-            let cities = await getCitiesIDB(bounds);
-            let city = _.filter(cities, function (city) {return city.geonameId == openCityGeonameId});
-            sideRightOpenAndParse(city[0]);
+            $("#rightSide").hide();
+            $("#bottomSide").hide();
         }
-        mapIdle();
     });
 }
 
-async function initSortBySettings() {
-    $('select[name=sort-by]').val(configuration.sortBy);
-    
-    $('select[name=sort-by]').on("input", async function () {
-        configuration.sortBy = $(this).val();
+function initSortBySettings() {
+    $('select[name=sort-by]').val(localStorage.getItem('sortBy'));
 
-        setLocalStorage(configuration);
+    $('select[name=sort-by]').on("input",  function () {
+        localStorage.setItem('sortBy', $(this).val());
 
         if (rightSideOpen || bottomSideOpen) {
-            $("#rightSide").empty();
-            $("#bottomSide").empty();
-
-            let cities = await getCitiesIDB(bounds);
-            let city = _.filter(cities, function (city) {
-                return city.geonameId == openCityGeonameId
-            });
-            sideRightOpenAndParse(city[0]);
+            $("#rightSide").hide();
+            $("#bottomSide").hide();
         }
     });
 }
@@ -550,129 +377,99 @@ async function initSortBySettings() {
 async function getLanguage() {
     return await axios({
         method: 'get',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${map.center.lat()},${map.center.lng()}&key=AIzaSyCo1UVUXi83YUE3yc8Xyrzml9Bfg-s1FpI`,
+        url: `/language?lat=${map.center.lat()}&lng=${map.center.lng()}`,
     }).then(async function (response) {
-        if (response.data.status == "ZERO_RESULTS") {
-            configuration.language = "en"
-        } else if (_.contains(response.data.results[response.data.results.length - 1].types), "country") {
-            configuration.country = response.data.results[response.data.results.length - 1].formatted_address;
-            if (configuration.country.slice(configuration.country.length - 3) == "USA") {
-                configuration.country = "United States";
-            }
-            setLocalStorage(configuration);
-            return await axios({
-                method: 'get',
-                url: "json/countries.json"
-            }).then(function (data) {
-                configuration.language = _.findWhere(data.data, {name: configuration.country}).languages[0];
-                setLocalStorage(configuration);
-            });
-        }
+        debugger;
+
+
+
+        
+        // if (response.data.language.status == "ZERO_RESULTS") {
+        //     localStorage.setItem('language', 'en');
+        // } else if (_.contains(response.data.language.results[response.data.language.response.data.language.length - 1].types), "country") {
+        //     country = response.data.language.results[response.data.language.results.length - 1].formatted_address;
+        //     if (country.slice(country.length - 3) == "USA") {
+        //         country = "United States";
+        //     }
+        //     return await axios({
+        //         method: 'get',
+        //         url: "json/countries.json"
+        //     }).then(function (data) {
+        //         language = _.findWhere(data.data, {name: localStorage.getItem('language')}).languages[0];
+        //         localStorage.setItem('language', language);
+        //     });
+        // }
     });
 }
 
-function getUserLocation() {
-    let promise = $.Deferred();
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            let pos = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-            configuration.mapSettings.location.lat = pos.lat;
-            configuration.mapSettings.location.lng = pos.lng;
-            setLocalStorage(configuration);
-            return promise.resolve();
-        });
-    } else {
-        firstVisitGeolocationBlocked();
-    }
-    return promise.promise();
-}
+// function initUserLogin() {
+//     $("#user-login").click(function() {
+//         if ($("#log-in-sign-up-container").hasClass("active")) {
+//             $("#log-in-sign-up-container").removeClass("active");
+//             $("#log-in-sign-up-container").empty();
+//         } else {
+//             $("#log-in-sign-up-container").addClass("active");
+//             renderTemplate("signUp", null, $("#log-in-sign-up-container"));
+//             $("#log-in-window").hide();
 
-var optionsGeolocation = {
-    enableHighAccuracy: true,
-    timeout: 100000,
-    maximumAge: 0
-};
+//             $('.tab a').click( function (e) {
+//                 if ($(this).data().id == "signup") {
+//                     $("#log-in-window").hide();
+//                     $("#log-in-tab").removeClass("active");
 
-function errorGeolocation(err) {
-    console.warn(`ERROR(${err.code}): ${err.message}`);
-}
-
-function firstVisitGeolocationBlocked() {
-    var location = prompt("Location: ");
-    alert("navigate to city");
-}
-
-function initUserLogin() {
-    $("#user-login").click(function() {
-        if ($("#log-in-sign-up-container").hasClass("active")) {
-            $("#log-in-sign-up-container").removeClass("active");
-            $("#log-in-sign-up-container").empty();
-        } else {
-            $("#log-in-sign-up-container").addClass("active");
-            renderTemplate("signUp", null, $("#log-in-sign-up-container"));
-            $("#log-in-window").hide();
-
-            $('.tab a').click( function (e) {
-                if ($(this).data().id == "signup") {
-                    $("#log-in-window").hide();
-                    $("#log-in-tab").removeClass("active");
-
-                    $("#sign-up-window").show();
-                    $("#sign-up-tab").addClass("active");
-                } else {
-                    $("#log-in-window").show();
-                    $("#log-in-tab").addClass("active");
+//                     $("#sign-up-window").show();
+//                     $("#sign-up-tab").addClass("active");
+//                 } else {
+//                     $("#log-in-window").show();
+//                     $("#log-in-tab").addClass("active");
                     
-                    $("#sign-up-window").hide();
-                    $("#sign-up-tab").removeClass("active");
-                }
-            });
+//                     $("#sign-up-window").hide();
+//                     $("#sign-up-tab").removeClass("active");
+//                 }
+//             });
 
 
-            $("#signUp").click(function () {
-                signUp($("input#emailSignUp").val(), $("input#passwordSignUp").val());
-            })
-            $("#logIn").click(function () {
-                logIn($("input#emailLogIn").val(), $("input#passwordLogIn").val());
-            })
-        }
-    });
-}
+//             $("#signUp").click(function () {
+//                 signUp($("input#emailSignUp").val(), $("input#passwordSignUp").val());
+//             })
+//             $("#logIn").click(function () {
+//                 logIn($("input#emailLogIn").val(), $("input#passwordLogIn").val());
+//             })
+//         }
+//     });
+// }
 
-firebase.initializeApp({
-    apiKey: "AIzaSyCo1UVUXi83YUE3yc8Xyrzml9Bfg-s1FpI",
-    authDomain: "the-here-times.firebaseapp.com",
-    databaseURL: "https://the-here-times.firebaseio.com",
-    projectId: "the-here-times",
-    storageBucket: "the-here-times.appspot.com",
-    messagingSenderId: "142930524086"
-});
+// // firebase.initializeApp({
+// //     apiKey: "AIzaSyCo1UVUXi83YUE3yc8Xyrzml9Bfg-s1FpI",
+// //     authDomain: "the-here-times.firebaseapp.com",
+// //     databaseURL: "https://the-here-times.firebaseio.com",
+// //     projectId: "the-here-times",
+// //     storageBucket: "the-here-times.appspot.com",
+// //     messagingSenderId: "142930524086"
+// // });
 
-function signUp(email, password) {
-    firebase.auth().createUserWithEmailAndPassword(email, password).then(function(success) {
-        console.log(success);
-    }).catch(function (error) {
-        // Handle Errors here.
-        var errorCode = error.code;
-        var errorMessage = error.message;
-        console.log(errorCode);
-    });
-}
+// function signUp(email, password) {
+//     firebase.auth().createUserWithEmailAndPassword(email, password).then(function(success) {
+//         console.log(success);
+//     }).catch(function (error) {
+//         // Handle Errors here.
+//         var errorCode = error.code;
+//         var errorMessage = error.message;
+//         console.log(errorCode);
+//     });
+// }
 
-function logIn(email, password) {
-    firebase.auth().signInWithEmailAndPassword(email, password).then(function (success) {
-        console.log(success);
-    }).catch(function (error) {
-        // Handle Errors here.
-        var errorCode = error.code;
-        var errorMessage = error.message;
-        alert(errorMessage);
-    });
-}
+// function logIn(email, password) {
+//     firebase.auth().signInWithEmailAndPassword(email, password).then(function (success) {
+//         console.log(success);
+//     }).catch(function (error) {
+//         // Handle Errors here.
+//         var errorCode = error.code;
+//         var errorMessage = error.message;
+//         alert(errorMessage);
+//     });
+// }
 this["JST"] = this["JST"] || {};
 
 this["JST"]["bottomSide"] = Handlebars.template({"1":function(container,depth0,helpers,partials,data) {
@@ -689,7 +486,7 @@ this["JST"]["bottomSide"] = Handlebars.template({"1":function(container,depth0,h
     var stack1;
 
   return "<div id=\"articlesRight\">\n"
-    + ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.articles : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "")
+    + ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "")
     + "</div>";
 },"useData":true});
 
@@ -723,7 +520,7 @@ this["JST"]["rightSide"] = Handlebars.template({"1":function(container,depth0,he
     var stack1;
 
   return "<div id=\"articlesRight\">\n"
-    + ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.articles : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "")
+    + ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "")
     + "</div>";
 },"useData":true});
 

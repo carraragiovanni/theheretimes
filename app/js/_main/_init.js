@@ -1,5 +1,3 @@
-let configuration = {};
-let map;
 let bounds;
 let boundsWithMargin;
 var markers = [];
@@ -7,53 +5,38 @@ let openCityGeonameId;
 let rightSideOpen = false;
 let bottomSideOpen = false;
 let settingsOpen = false;
+let latitude = 0;
+let longitude = 0;
+let map;
+let language = 'en'
 
-$(document).ready(async function () {
-    if (JSON.parse(localStorage.getItem('configuration')) == null) {
-        // FIRST VISIT
-        await writeConfigurationFile();
-    
-        initSettings();
-
-        initMapComponents();
-
-        async function success(position) {
-            let latitude = position.coords.latitude;
-            let longitude = position.coords.longitude;
-            console.log(latitude);
-            console.log(longitude);
-            map.setCenter(new google.maps.LatLng(latitude, longitude));
-        }
-    
-        function error() {
-            status.textContent = 'Unable to retrieve your location';
-        }
-
-        if (!navigator.geolocation) {
-            status.textContent = 'Geolocation is not supported by your browser';
-        } else {
-            navigator.geolocation.getCurrentPosition(success, error);
-        }
-    } else {
-        // NOT FIRST VISIT
-        
-        getLocalStorage();
-        initSettings();
-        initMapComponents();
-    }
+$(document).ready(function () {
+    initMap();
+    initSettings();
+    initAutocomplete();
 });
 
+
 function initSettings() {
+    if (localStorage.getItem('visited') === 'true') {
+        //2+visit
+        $(`input:radio[name=language][value=${localStorage.getItem('language')}]`).attr('checked', true);
+        $('input[name=days-since-published]').val(localStorage.getItem('daysSincePublished'));
+        $('#days-since-published-input').text(localStorage.getItem('daysSincePublished'));
+        $('select[name=sort-by]').val(localStorage.getItem('sortBy'));
+    } else {
+        //firstvisit
+        localStorage.setItem('sortBy', 'relevancy');
+        localStorage.setItem('languageSelection', 'en');
+        localStorage.setItem('daysSincePublished', 12);
+    }
+
     initLanguageSettings();
     initDaysSincePublishedSettings();
     initSortBySettings();
     initLayout();
-    initUserLogin();
-}
 
-function initMapComponents() {
-    initMap();
-    initAutocomplete();
+    localStorage.setItem('visited', true);
 }
 
 function initLayout() {
@@ -74,22 +57,20 @@ function initLayout() {
 
 function resizeScreen() {
     if (window.outerWidth <= 576) {
-        configuration.device = "mobile";
+        localStorage.setItem('device', 'mobile');
         configureMobileLayout();
     } else {
-        configuration.device = "desktop";
+        localStorage.setItem('device', 'desktop');
     }
-
-    $("#theHereTimesLogo").css("left", (window.innerWidth / 2) - ($("#theHereTimesLogo").width() / 2));
     
-    setLocalStorage(configuration);
+    $("#theHereTimesLogo").css("left", (window.innerWidth / 2) - ($("#theHereTimesLogo").width() / 2));
 }
 
 function configureMobileLayout() { 
     $("#settings-container-desktop").addClass("mobile-settings-container");
-
+    
     $(`<i id="mobile-x" class="large material-icons">settings</i>`).insertAfter("#settings-container-desktop");
-
+    
     $("#mobile-x").on("click", function () {
         if (settingsOpen == false) {
             $(".mobile-settings-container").css("display", "block");

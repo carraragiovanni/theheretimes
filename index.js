@@ -15,9 +15,10 @@ app.route('/language').get(async function (req, res) {
 });
 
 app.route('/cities').get(async function (req, res) {
+    let maxRows = 9;
     return await axios({
         method: 'GET',
-        url: `http://api.geonames.org/citiesJSON?north=${req.query.north}&south=${req.query.south}&east=${req.query.east}&west=${req.query.west}&maxRows=3&lang=${req.query.lang}}&username=carraragiovanni`
+        url: `http://api.geonames.org/citiesJSON?north=${req.query.north}&south=${req.query.south}&east=${req.query.east}&west=${req.query.west}&maxRows=${maxRows}&lang=${req.query.lang}}&username=carraragiovanni`
     }).then(function (response) {
         res.send({
             cities: response.data

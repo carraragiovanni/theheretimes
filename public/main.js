@@ -291,12 +291,12 @@ async function sideRightOpenAndParse(city) {
 
 async function getArticles(city) {
     var dateFrom = moment().subtract(localStorage.getItem('daysSincePublished'), "days").format("YYYY-MM-DD");
-    console.log(dateFrom)
     return await axios({
         method: 'GET',
         url: `/articles?q=${city.name}&lang=${localStorage.getItem('language')}&from=${dateFrom}&sortBy=${localStorage.getItem('sortBy')}`,
     }).then(function (response) {
         return response.data.articles.articles;
+        debugger;
     });
 }
 

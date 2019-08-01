@@ -9,6 +9,9 @@ function getCitiesLanguage(existingCitiesInIDB) {
 }
 
 async function mapIdle() {
+    localStorage.setItem('lat', map.getCenter().lat());
+    localStorage.setItem('lng', map.getCenter().lng());
+    localStorage.setItem('zoom', map.getZoom());
     deleteMarkers();
     
     if ($('input[name=language]:checked').val() == "auto") {

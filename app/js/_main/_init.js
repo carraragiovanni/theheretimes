@@ -16,6 +16,30 @@ $(document).ready(function () {
     initAutocomplete();
 });
 
+function getUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            var pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            
+            map.setCenter({lat: pos.lat, lng: pos.lng});
+            localStorage.setItem('lat', pos.lat);
+            localStorage.setItem('lng', pos.lng);
+        }, function () {
+            handleLocationError(true, infoWindow, map.getCenter());
+        });
+    } else {
+        // Browser doesn't support Geolocation
+        handleLocationError(false, infoWindow, map.getCenter());
+    }
+}
+
+function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+    alert("error")
+}
+
 
 function initSettings() {
     if (localStorage.getItem('visited') === 'true') {
@@ -24,18 +48,21 @@ function initSettings() {
         $('input[name=days-since-published]').val(localStorage.getItem('daysSincePublished'));
         $('#days-since-published-input').text(localStorage.getItem('daysSincePublished'));
         $('select[name=sort-by]').val(localStorage.getItem('sortBy'));
+        map.setCenter({ lat: parseFloat(localStorage.getItem('lat')), lng: parseFloat(localStorage.getItem('lng')) });
+        map.setZoom(parseInt(localStorage.getItem('zoom')));
     } else {
         //firstvisit
         localStorage.setItem('sortBy', 'relevancy');
         localStorage.setItem('languageSelection', 'en');
         localStorage.setItem('daysSincePublished', 12);
+        getUserLocation();
     }
-
+    
     initLanguageSettings();
     initDaysSincePublishedSettings();
     initSortBySettings();
     initLayout();
-
+    
     localStorage.setItem('visited', true);
 }
 

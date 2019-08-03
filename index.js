@@ -41,4 +41,8 @@ app.route('/articles').get(async function (req, res) {
     });
 });
 
+app.get('/.well-known/acme-challenge/:content', function (req, res) {
+    res.send('xxxxxxxxxxxx-yyyy.zzzzzzzzzzzzzzzzzzz')
+})
+
 app.listen(process.env.PORT || 4600);

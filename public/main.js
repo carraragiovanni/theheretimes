@@ -306,21 +306,23 @@ async function sideRightOpenAndParse(city) {
         $("#rightSide").show();
         rightSideOpen = true;
         renderTemplate("rightSideTitle", city.name, $("#rightSide"));
-    } else if (configuration.device == "mobile") {
+    } else if (localStorage.getItem('device') == "mobile") {
         $("#bottomSide").show();
         bottomSideOpen = true;
         renderTemplate("bottomSideTitle", city.name, $("#bottomSide"));
     }
 
     let articles = await getArticles(city);
-    
-    if (localStorage.getItem('device') == "desktop") {
-        renderTemplate("rightSide", articles, $("#rightSideArticlesContainer"));
-    } else if (localStorage.getItem('device') == "mobile") {
-        renderTemplate("bottomSide", articles, $("#bottomSideArticlesContainer"));
+    if (articles.length != 0) {
+        if (localStorage.getItem('device') == "desktop") {
+            renderTemplate("rightSide", articles, $("#rightSideArticlesContainer"));
+        } else if (localStorage.getItem('device') == "mobile") {
+            renderTemplate("bottomSide", articles, $("#bottomSideArticlesContainer"));
+        }
+    } else {
+        console.log("0 articles");
+        renderTemplate("bottomSide", articles = { title: "banana" }, $("#bottomSideArticlesContainer"));
     }
-    
-    cityOpen = city.geonameId;
 }
 
 async function getArticles(city) {

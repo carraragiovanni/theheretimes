@@ -41,8 +41,8 @@ app.route('/articles').get(async function (req, res) {
     });
 });
 
-app.get('/.well-known/acme-challenge/:content', function (req, res) {
-    res.send('nYZmsuiUl1dcdr7SO1ndzi0fjIBJ5HuH_c7qG3HmLJI')
+app.get('/.well-known/acme-challenge/LBY1SxIh8mkiRoi3Om_o4mBZrQjZnHnwfzuTDUeIIDs', function (req, res) {
+    res.send('LBY1SxIh8mkiRoi3Om_o4mBZrQjZnHnwfzuTDUeIIDs.GPFxAlcBys1NP9P1og1BeMDg-CskuDvmNqDI5yGiNJc')
 })
 
 app.listen(process.env.PORT || 4600);

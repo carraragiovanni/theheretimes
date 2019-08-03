@@ -53,7 +53,7 @@ function initSettings() {
     } else {
         //firstvisit
         localStorage.setItem('sortBy', 'relevancy');
-        localStorage.setItem('languageSelection', 'en');
+        localStorage.setItem('languageSelection', 'auto');
         localStorage.setItem('daysSincePublished', 12);
         getUserLocation();
     }
@@ -80,6 +80,10 @@ function initLayout() {
     } else {
         //The browser does not support Javascript event binding
     }    
+
+    $("#user-location").click(function() {
+        getUserLocation();
+    })
 }
 
 function resizeScreen() {
@@ -132,7 +136,7 @@ async function mapIdle() {
     return await axios({
         method: 'GET',
         url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${language}}`,
-}).then(function (response) {
+    }).then(function (response) {
         response.data.cities.geonames.forEach(function (newCity) {
             addMarker(newCity);
         });
@@ -326,7 +330,6 @@ async function getArticles(city) {
         url: `/articles?q=${city.name}&lang=${localStorage.getItem('language')}&from=${dateFrom}&sortBy=${localStorage.getItem('sortBy')}`,
     }).then(function (response) {
         return response.data.articles.articles;
-        debugger;
     });
 }
 
@@ -357,18 +360,22 @@ function createIDBArticles(articles, city) {
     return article;
 }
 
-function initLanguageSettings() {
+async function initLanguageSettings() {
+    if (localStorage.getItem('languageSelection') == 'auto') {
+        getLanguage();
+    }
+    
     $(`input:radio[name=language][value=${localStorage.getItem('languageSelection')}]`).attr('checked', true);
-
+    
     $("input:radio[name=language]").change(async function () {
         localStorage.setItem('language', $(this).val());
-
+        
         if ($(this).val() == 'auto') {
             await getLanguage();
         } else {
             $('#language-input-auto').empty();
         }
-
+        
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").hide();
             $("#bottomSide").hide();
@@ -379,11 +386,11 @@ function initLanguageSettings() {
 function initDaysSincePublishedSettings() {    
     $('#days-since-published-input').text(localStorage.getItem('daysSincePublished'));
     $('input[name=days-since-published]').val(localStorage.getItem('daysSincePublished'));
-
+    
     $('input[name=days-since-published]').on("input", function () {
         localStorage.setItem('daysSincePublished', parseInt($(this).val()));
         $('#days-since-published-input').text($(this).val());
-
+        
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").hide();
             $("#bottomSide").hide();
@@ -393,10 +400,10 @@ function initDaysSincePublishedSettings() {
 
 function initSortBySettings() {
     $('select[name=sort-by]').val(localStorage.getItem('sortBy'));
-
+    
     $('select[name=sort-by]').on("input",  function () {
         localStorage.setItem('sortBy', $(this).val());
-
+        
         if (rightSideOpen || bottomSideOpen) {
             $("#rightSide").hide();
             $("#bottomSide").hide();
@@ -406,29 +413,24 @@ function initSortBySettings() {
 
 async function getLanguage() {
     return await axios({
-        method: 'get',
-        url: `/language?lat=${map.center.lat()}&lng=${map.center.lng()}`,
+        method: 'GET',
+        url: `/language?lat=${localStorage.getItem('lat')}&lng=${localStorage.getItem('lng')}`,
     }).then(async function (response) {
-        debugger;
-
-
-
-        
-        // if (response.data.language.status == "ZERO_RESULTS") {
-        //     localStorage.setItem('language', 'en');
-        // } else if (_.contains(response.data.language.results[response.data.language.response.data.language.length - 1].types), "country") {
-        //     country = response.data.language.results[response.data.language.results.length - 1].formatted_address;
-        //     if (country.slice(country.length - 3) == "USA") {
-        //         country = "United States";
-        //     }
-        //     return await axios({
-        //         method: 'get',
-        //         url: "json/countries.json"
-        //     }).then(function (data) {
-        //         language = _.findWhere(data.data, {name: localStorage.getItem('language')}).languages[0];
-        //         localStorage.setItem('language', language);
-        //     });
-        // }
+        if (response.data.language.status == "ZERO_RESULTS") {
+            localStorage.setItem('language', 'en');
+        } else if (_.contains(response.data.language.results[response.data.language.results.length - 1].types, "country")) {
+            country = response.data.language.results[response.data.language.results.length - 1].formatted_address;
+            if (country.slice(country.length - 3) == "USA") {
+                country = "United States";
+            }
+            return await axios({
+                method: 'get',
+                url: "json/countries.json"
+            }).then(function (data) {
+                language = _.findWhere(data.data, {name: country}).languages[0];
+                localStorage.setItem('language', language);
+            });
+        }
     });
 }
 

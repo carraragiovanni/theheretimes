@@ -22,7 +22,7 @@ async function mapIdle() {
     return await axios({
         method: 'GET',
         url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${language}}`,
-}).then(function (response) {
+    }).then(function (response) {
         response.data.cities.geonames.forEach(function (newCity) {
             addMarker(newCity);
         });

@@ -27,7 +27,6 @@ async function getArticles(city) {
         url: `/articles?q=${city.name}&lang=${localStorage.getItem('language')}&from=${dateFrom}&sortBy=${localStorage.getItem('sortBy')}`,
     }).then(function (response) {
         return response.data.articles.articles;
-        debugger;
     });
 }
 

@@ -24,10 +24,10 @@
                     <p class="setting-input">Language</p>
                     <p id="language-input-auto"></p>
                 </div>
-                <!-- <div>
+                <div>
                     <input type="radio" name="language" value="auto">
                     <label for="auto">Auto</label>
-                </div> -->
+                </div>
                 <div>
                     <input type="radio" name="language" value="en">
                     <label for="english">English</label>
@@ -55,27 +55,32 @@
                 </div>
                 <input type="range" name="days-since-published" min="1" max="29">
                 
-                <div id="sort-by">
-                    <p class="setting-input">Sort By</p>
-                    <select name="sort-by">
-                        <option value="relevancy">Relevancy</option>
-                        <option value="publishedAt">Date Published</option>
-                        <option value="popularity">Popularity</option>
-                        <option value="Social Shares" disabled="disabled">Social Shares (Coming Soon)</option>
-                    </select>
+                <div class="flexbox">
+                    <div id="sort-by">
+                        <p class="setting-input">Sort By</p>
+                        <select name="sort-by">
+                            <option value="relevancy">Relevancy</option>
+                            <option value="publishedAt">Date Published</option>
+                            <option value="popularity">Popularity</option>
+                            <option value="Social Shares" disabled="disabled">Social Shares (Coming Soon)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <i id="user-location" class="material-icons">location_searching</i>
+                    </div>
                 </div>
             </div>
         </div>
         <!-- <button id="sign-up-log-in-button">sign-up / login</button>
-        <div id="sign-up-log-in-container"></div> -->
-    </div>
-
-    <div id="rightSide"></div>
-    <div id="bottomSide"></div>
-
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1UVUXi83YUE3yc8Xyrzml9Bfg-s1FpI&libraries=places"></script>
-    <script src="libs.js"></script>
-    <script src="main.js"></script>
-</body>
-
-</html>
+            <div id="sign-up-log-in-container"></div> -->
+        </div>
+        
+        <div id="rightSide"></div>
+        <div id="bottomSide"></div>
+        
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1UVUXi83YUE3yc8Xyrzml9Bfg-s1FpI&libraries=places"></script>
+        <script src="libs.js"></script>
+        <script src="main.js"></script>
+    </body>
+    
+    </html>

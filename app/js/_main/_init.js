@@ -53,7 +53,7 @@ function initSettings() {
     } else {
         //firstvisit
         localStorage.setItem('sortBy', 'relevancy');
-        localStorage.setItem('languageSelection', 'en');
+        localStorage.setItem('languageSelection', 'auto');
         localStorage.setItem('daysSincePublished', 12);
         getUserLocation();
     }
@@ -80,6 +80,10 @@ function initLayout() {
     } else {
         //The browser does not support Javascript event binding
     }    
+
+    $("#user-location").click(function() {
+        getUserLocation();
+    })
 }
 
 function resizeScreen() {

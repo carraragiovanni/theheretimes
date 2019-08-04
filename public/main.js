@@ -313,16 +313,16 @@ async function sideRightOpenAndParse(city) {
     }
 
     let articles = await getArticles(city);
-    if (articles.length != 0) {
+    // if (articles.length != 0) {
         if (localStorage.getItem('device') == "desktop") {
             renderTemplate("rightSide", articles, $("#rightSideArticlesContainer"));
         } else if (localStorage.getItem('device') == "mobile") {
             renderTemplate("bottomSide", articles, $("#bottomSideArticlesContainer"));
         }
-    } else {
-        console.log("0 articles");
-        renderTemplate("bottomSide", articles = { title: "banana" }, $("#bottomSideArticlesContainer"));
-    }
+    // } else {
+        // console.log("0 articles");
+        // renderTemplate("bottomSide", articles = { title: "banana" }, $("#bottomSideArticlesContainer"));
+    // }
 }
 
 async function getArticles(city) {

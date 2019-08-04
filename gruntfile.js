@@ -13,7 +13,7 @@ module.exports = function(grunt) {
                 }
             }
         },
-
+        
         handlebars: {
             compile: {
                 options: {
@@ -27,7 +27,7 @@ module.exports = function(grunt) {
                 }
             }
         },
- 
+        
         
         concat: {
             customjs: {
@@ -48,8 +48,19 @@ module.exports = function(grunt) {
                 dest: 'public/libs.js'
             }
         },
-
+        // uglify: {
+        //     my_target: {
+        //         files: {
+        //             'banana.js': ["public/libs.js"]
+        //         }
+        //     }
+        // },
+        
         watch: {
+            // uglify: {
+            //     files: 'app/js/**/*.js',
+            //     tasks: 'default'
+            // },
             customjs: {
                 files: 'app/js/**/*.js',
                 tasks: 'concat:customjs'
@@ -70,7 +81,6 @@ module.exports = function(grunt) {
                 tasks: 'default'
             }
         },
-
     });
     
     grunt.loadNpmTasks('grunt-sass');
@@ -79,5 +89,5 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     
-    grunt.registerTask('default', ['concat', 'handlebars', 'sass', 'watch']);
+    grunt.registerTask('default', ['concat', 'handlebars', 'sass', 'watch', 'uglify']);
 };

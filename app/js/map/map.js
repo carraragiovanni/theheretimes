@@ -32,11 +32,12 @@ function initMap() {
     });
 }
 function updateBounds() {
+    // debugger;
     bounds = {
-        north: map.getBounds().na.l,
-        south: map.getBounds().na.j,
-        east: map.getBounds().ga.l,
-        west: map.getBounds().ga.j
+        north: map.getBounds().ha.l,
+        south: map.getBounds().ha.j,
+        east: map.getBounds().da.l,
+        west: map.getBounds().da.j
     }
     boundsWithMargin = {
         north: bounds.north - (bounds.north - bounds.south) * 0.2,

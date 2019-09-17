@@ -198,10 +198,10 @@ function initMap() {
 function updateBounds() {
     // debugger;
     bounds = {
-        north: map.getBounds().ha.l,
-        south: map.getBounds().ha.j,
-        east: map.getBounds().da.l,
-        west: map.getBounds().da.j
+        north: map.getBounds().na.g,
+        south: map.getBounds().na.h,
+        east: map.getBounds().ja.g,
+        west: map.getBounds().ja.h
     }
     boundsWithMargin = {
         north: bounds.north - (bounds.north - bounds.south) * 0.2,

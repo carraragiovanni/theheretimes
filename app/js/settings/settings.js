@@ -54,6 +54,7 @@ async function getLanguage() {
         method: 'GET',
         url: `/language?lat=${localStorage.getItem('lat')}&lng=${localStorage.getItem('lng')}`,
     }).then(async function (response) {
+        // debugger;
         if (response.data.language.status == "ZERO_RESULTS") {
             localStorage.setItem('language', 'en');
         } else if (_.contains(response.data.language.results[response.data.language.results.length - 1].types, "country")) {

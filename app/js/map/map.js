@@ -34,10 +34,10 @@ function initMap() {
 function updateBounds() {
     // debugger;
     bounds = {
-        north: map.getBounds().na.g,
-        south: map.getBounds().na.h,
-        east: map.getBounds().ja.g,
-        west: map.getBounds().ja.h
+        north: map.getBounds().oa.g,
+        south: map.getBounds().oa.h,
+        east: map.getBounds().ka.h,
+        west: map.getBounds().ka.g
     }
     boundsWithMargin = {
         north: bounds.north - (bounds.north - bounds.south) * 0.2,

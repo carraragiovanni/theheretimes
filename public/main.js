@@ -198,10 +198,10 @@ function initMap() {
 function updateBounds() {
     // debugger;
     bounds = {
-        north: map.getBounds().na.g,
-        south: map.getBounds().na.h,
-        east: map.getBounds().ja.g,
-        west: map.getBounds().ja.h
+        north: map.getBounds().oa.g,
+        south: map.getBounds().oa.h,
+        east: map.getBounds().ka.h,
+        west: map.getBounds().ka.g
     }
     boundsWithMargin = {
         north: bounds.north - (bounds.north - bounds.south) * 0.2,
@@ -419,6 +419,7 @@ async function getLanguage() {
         method: 'GET',
         url: `/language?lat=${localStorage.getItem('lat')}&lng=${localStorage.getItem('lng')}`,
     }).then(async function (response) {
+        // debugger;
         if (response.data.language.status == "ZERO_RESULTS") {
             localStorage.setItem('language', 'en');
         } else if (_.contains(response.data.language.results[response.data.language.results.length - 1].types, "country")) {

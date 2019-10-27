@@ -6,7 +6,7 @@ app.use(express.static(__dirname + '/public'));
 app.route('/language').get(async function (req, res) {
     return await axios({
         method: 'GET',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${req.query.lat},${req.query.lng}&key=AIzaSyCo1UVUXi83YUE3yc8Xyrzml9Bfg-s1FpI`
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${req.query.lat},${req.query.lng}&key=AIzaSyA06I_-sl_8jRhBn1KUjmmVq75eU1H9Rxw`
     }).then(function (response) {
         res.send({
             language: response.data

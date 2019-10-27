@@ -80,8 +80,11 @@ typedef struct grpc_event_engine_vtable {
   void (*pollset_set_add_fd)(grpc_pollset_set* pollset_set, grpc_fd* fd);
   void (*pollset_set_del_fd)(grpc_pollset_set* pollset_set, grpc_fd* fd);
 
+  bool (*is_any_background_poller_thread)(void);
   void (*shutdown_background_closure)(void);
   void (*shutdown_engine)(void);
+  bool (*add_closure_to_background_poller)(grpc_closure* closure,
+                                           grpc_error* error);
 } grpc_event_engine_vtable;
 
 /* register a new event engine factory */
@@ -180,6 +183,15 @@ void grpc_pollset_add_fd(grpc_pollset* pollset, struct grpc_fd* fd);
 
 void grpc_pollset_set_add_fd(grpc_pollset_set* pollset_set, grpc_fd* fd);
 void grpc_pollset_set_del_fd(grpc_pollset_set* pollset_set, grpc_fd* fd);
+
+/* Returns true if the caller is a worker thread for any background poller. */
+bool grpc_is_any_background_poller_thread();
+
+/* Returns true if the closure is registered into the background poller. Note
+ * that the closure may or may not run yet when this function returns, and the
+ * closure should not be blocking or long-running. */
+bool grpc_add_closure_to_background_poller(grpc_closure* closure,
+                                           grpc_error* error);
 
 /* Shut down all the closures registered in the background poller. */
 void grpc_shutdown_background_closure();

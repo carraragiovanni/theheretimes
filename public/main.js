@@ -135,6 +135,9 @@ async function mapIdle() {
 
     return await axios({
         method: 'GET',
+        headers: {
+            "Access-Control-Allow-Origin": "*"
+        },
         url: `/cities?north=${boundsWithMargin.north}&south=${boundsWithMargin.south}&west=${boundsWithMargin.west}&east=${boundsWithMargin.east}&maxRows=3&lang=${language}}`,
     }).then(function (response) {
         response.data.cities.geonames.forEach(function (newCity) {
@@ -198,8 +201,8 @@ function initMap() {
 function updateBounds() {
     // debugger;
     bounds = {
-        north: map.getBounds().oa.g,
-        south: map.getBounds().oa.h,
+        north: map.getBounds().pa.h,
+        south: map.getBounds().pa.g,
         east: map.getBounds().ka.h,
         west: map.getBounds().ka.g
     }

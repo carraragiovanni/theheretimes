@@ -34,8 +34,8 @@ function initMap() {
 function updateBounds() {
     // debugger;
     bounds = {
-        north: map.getBounds().oa.g,
-        south: map.getBounds().oa.h,
+        north: map.getBounds().pa.h,
+        south: map.getBounds().pa.g,
         east: map.getBounds().ka.h,
         west: map.getBounds().ka.g
     }

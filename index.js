@@ -41,8 +41,4 @@ app.route('/articles').get(async function (req, res) {
     });
 });
 
-app.get('/.well-known/acme-challenge/LBY1SxIh8mkiRoi3Om_o4mBZrQjZnHnwfzuTDUeIIDs', function (req, res) {
-    res.send('LBY1SxIh8mkiRoi3Om_o4mBZrQjZnHnwfzuTDUeIIDs.GPFxAlcBys1NP9P1og1BeMDg-CskuDvmNqDI5yGiNJc')
-})
-
 app.listen(process.env.PORT || 4600);

@@ -10,8 +10,8 @@ let longitude = 0;
 let map;
 let language = 'en'
 
-$(document).ready(function () {
-    initMap();
+$(document).ready(async function () {
+    await initMap();
     initSettings();
     initAutocomplete();
 });
@@ -23,7 +23,6 @@ function getUserLocation() {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             };
-            
             map.setCenter({lat: pos.lat, lng: pos.lng});
             localStorage.setItem('lat', pos.lat);
             localStorage.setItem('lng', pos.lng);
@@ -31,6 +30,7 @@ function getUserLocation() {
             handleLocationError(true, infoWindow, map.getCenter());
         });
     } else {
+        // debugger;
         // Browser doesn't support Geolocation
         handleLocationError(false, infoWindow, map.getCenter());
     }
@@ -41,7 +41,7 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 }
 
 
-function initSettings() {
+async function initSettings() {
     if (localStorage.getItem('visited') === 'true') {
         //2+visit
         $(`input:radio[name=language][value=${localStorage.getItem('language')}]`).attr('checked', true);
@@ -55,7 +55,7 @@ function initSettings() {
         localStorage.setItem('sortBy', 'relevancy');
         localStorage.setItem('languageSelection', 'auto');
         localStorage.setItem('daysSincePublished', 12);
-        getUserLocation();
+        await getUserLocation();
     }
     
     initLanguageSettings();
@@ -165,7 +165,7 @@ Handlebars.registerHelper('parsePublishedAtDate', function (publishedAt) {
         return moment(publishedAt).format("L");
     }
 });
-function initMap() {
+async function initMap() {
     let options = {
         zoomControl: false,
         mapTypeControl: false,
@@ -180,7 +180,7 @@ function initMap() {
         zoom: 8,
     }
 
-    map = new google.maps.Map($('#map')[0], options);
+    map = await new google.maps.Map($('#map')[0], options);
 
     map.addListener('idle', function () {
         updateBounds();
@@ -201,10 +201,10 @@ function initMap() {
 function updateBounds() {
     // debugger;
     bounds = {
-        north: map.getBounds().pa.h,
-        south: map.getBounds().pa.g,
-        east: map.getBounds().ka.h,
-        west: map.getBounds().ka.g
+        north: map.getBounds().Ya.i,
+        south: map.getBounds().Ya.g,
+        east: map.getBounds().Ta.i,
+        west: map.getBounds().Ta.g
     }
     boundsWithMargin = {
         north: bounds.north - (bounds.north - bounds.south) * 0.2,

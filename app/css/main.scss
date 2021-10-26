@@ -1,0 +1,25 @@
+//libs css
+@import "searchbox";
+
+//custom css
+@import "logo";
+@import "map";
+@import "rightside";
+@import "bottomside";
+@import "settingspanel";
+@import "mobile";
+
+body {
+    margin: 0;
+    font-family: 'Courier New', sans-serif;
+}
+
+.flexbox {
+    display: flex;
+    justify-content: space-between;
+}
+
+.flexbox-center {
+    display: flex;
+    justify-content: center;
+}

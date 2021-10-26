@@ -1,0 +1,27 @@
+#settings-container-desktop {
+    width: 302px;
+    background-color: white;
+    position: absolute;
+    left: 25px;
+    bottom: 25px;
+    z-index: 1000;
+    // padding: 20px 20px 20px 20px;
+
+    #settings-container-fields {
+        margin: 10px;
+    }
+
+    #language-label {
+        display: flex;
+        justify-content: space-between;
+    }
+ 
+    #days-since-published {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .setting-input {
+        font-weight: bold;
+    }
+}

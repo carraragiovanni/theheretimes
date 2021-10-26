@@ -1,0 +1,15 @@
+{
+    "device": null,
+    "country": null,
+    "languageInput": "auto",
+    "language": "en",
+    "publishedSince": 7,
+    "sortBy": "relevancy",
+    "mapSettings": {
+        "location": {
+            "lat": 0,
+            "lng": 0
+        },
+        "zoom": 8
+    }
+}

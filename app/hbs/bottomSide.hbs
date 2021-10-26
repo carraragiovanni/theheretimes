@@ -1,0 +1,9 @@
+<div id="articlesRight">
+    {{#each this}}
+    <div class="article row">
+            <a href="{{url}}" target="_blank">{{title}}</a>
+            <p>{{parsePublishedAtDate publishedAt}}</p>
+    </div>
+    <div class="divider"></div>
+    {{/each}}
+</div>

@@ -1,0 +1,8 @@
+#theHereTimesLogo {
+      position: absolute;
+      z-index: 100;
+      
+      @media (max-width: 576px) {
+            width: 60vw;
+      }
+}

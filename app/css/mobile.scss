@@ -1,0 +1,11 @@
+.mobile-settings-container {
+    display: none;
+    width: 90vw !important;
+    left: 5vw !important;
+}
+
+#mobile-x {
+    position: absolute;
+    right: 5vw;
+    top: calc(10vh + 10px);
+}

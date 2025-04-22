@@ -11,9 +11,31 @@ body {
     overflow: hidden;
 }
 
-#map {
-    height: 100%;
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
+    padding: 1rem;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo {
+    height: 2.5rem;
+    width: auto;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+#map {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
 }
 
 .sidebar {
@@ -98,5 +120,128 @@ body {
     .sidebar {
         width: 100%;
         right: -100%;
+        height: 25%;
+        top: auto;
+        bottom: 0;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar.open {
+        right: 0;
+    }
+
+    .sidebar-header {
+        padding: 15px;
+    }
+
+    #news-container {
+        padding: 15px;
+        max-height: calc(100% - 60px);
+        overflow-y: auto;
+    }
+}
+
+/* Settings Button */
+.settings-button {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: transform 0.2s;
+}
+
+.settings-button:hover {
+    transform: scale(1.1);
+}
+
+.settings-button svg {
+    width: 20px;
+    height: 20px;
+    color: #333;
+}
+
+/* Settings Panel */
+.settings-panel {
+    position: fixed;
+    bottom: 70px;
+    left: 20px;
+    width: 300px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    z-index: 1000;
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+.settings-panel.open {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.settings-header {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.settings-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+#close-settings {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+}
+
+.settings-content {
+    padding: 15px;
+}
+
+.setting-group {
+    margin-bottom: 15px;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #666;
+}
+
+.setting-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .settings-panel {
+        width: calc(100% - 40px);
+        left: 20px;
+        right: 20px;
     }
 } 

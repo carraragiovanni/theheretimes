@@ -9,6 +9,7 @@ const cities = [
 
 let map;
 let markers = [];
+let infoWindow = new google.maps.InfoWindow();
 let sidebar = document.getElementById('sidebar');
 let newsContainer = document.getElementById('news-container');
 let cityNameElement = document.getElementById('city-name');
@@ -91,38 +92,26 @@ async function initMap() {
                 const marker = new google.maps.Marker({
                     position: { lat: city.lat, lng: city.lng },
                     map: map,
-                    title: city.name,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 8,
-                        fillColor: '#EA4335',
-                        fillOpacity: 1,
-                        strokeWeight: 2,
-                        strokeColor: '#FFFFFF'
-                    }
+                    title: city.name
                 });
 
                 marker.addListener('click', () => {
-                    // Reset all markers to red
-                    markers.forEach(m => {
-                        m.setIcon({
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 8,
-                            fillColor: '#EA4335',
-                            fillOpacity: 1,
-                            strokeWeight: 2,
-                            strokeColor: '#FFFFFF'
-                        });
+                    // Show info window
+                    infoWindow.setContent(`
+                        <div style="
+                            padding: 5px;
+                            font-weight: bold;
+                            background: white;
+                            border-radius: 4px;
+                            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                        ">${city.name}</div>
+                    `);
+                    infoWindow.setOptions({
+                        disableAutoPan: true,
+                        pixelOffset: new google.maps.Size(0, -30)
                     });
-                    // Set clicked marker to blue
-                    marker.setIcon({
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 10,
-                        fillColor: '#4285F4',
-                        fillOpacity: 1,
-                        strokeWeight: 2,
-                        strokeColor: '#FFFFFF'
-                    });
+                    infoWindow.open(map, marker);
+
                     showCityNews(city.name);
                 });
 

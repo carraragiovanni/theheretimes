@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>US Cities News Map</title>
+    <title>The Here Times</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <header>
+        <img src="public/the_Here_Times.svg" alt="The Here Times" class="logo">
+    </header>
     <div id="map"></div>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
@@ -14,6 +17,50 @@
             <button id="close-sidebar">×</button>
         </div>
         <div id="news-container"></div>
+    </div>
+
+    <button id="settings-button" class="settings-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 0 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0 0-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 0 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 0 1 1.65 1.65 0 0 0 .33 1.82z"></path>
+        </svg>
+    </button>
+
+    <div id="settings-panel" class="settings-panel">
+        <div class="settings-header">
+            <h3>News Settings</h3>
+            <button id="close-settings">×</button>
+        </div>
+        <div class="settings-content">
+            <div class="setting-group">
+                <label>Date Range</label>
+                <select id="date-range">
+                    <option value="today">Today</option>
+                    <option value="week">Past Week</option>
+                    <option value="month">Past Month</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Sort By</label>
+                <select id="sort-by">
+                    <option value="relevancy">Relevancy</option>
+                    <option value="popularity">Popularity</option>
+                    <option value="publishedAt">Published Date</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Language</label>
+                <select id="language">
+                    <option value="all">All Languages</option>
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="it">Italian</option>
+                    <option value="zh">Chinese</option>
+                    <option value="de">German</option>
+                </select>
+            </div>
+        </div>
     </div>
 
     <!-- Load Google Maps API -->

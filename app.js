@@ -39,22 +39,106 @@ async function initMap() {
 
     map = new google.maps.Map(document.getElementById('map'), {
         center: center,
-        zoom: 4
+        zoom: 4,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
     });
 
-    // Add markers for each city
-    cities.forEach(city => {
-        const marker = new google.maps.Marker({
-            position: { lat: city.lat, lng: city.lng },
-            map: map,
-            title: city.name
-        });
+    // Add idle event listener to update cities when map stops moving
+    map.addListener('idle', () => {
+        const bounds = map.getBounds();
+        if (bounds) {
+            updateCitiesInViewport(bounds);
+        }
+    });
 
-        marker.addListener('click', () => {
-            showCityNews(city.name);
-        });
+    // Function to update cities based on current viewport
+    async function updateCitiesInViewport(bounds) {
+        if (!bounds) {
+            console.log('Map bounds not available yet');
+            return;
+        }
 
-        markers.push(marker);
+        try {
+            const response = await fetch('/api/cities', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    bounds: {
+                        north: bounds.getNorthEast().lat(),
+                        south: bounds.getSouthWest().lat(),
+                        east: bounds.getNorthEast().lng(),
+                        west: bounds.getSouthWest().lng()
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+            
+            const newCities = await response.json();
+            
+            // Clear existing markers
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            
+            // Add new markers
+            newCities.forEach(city => {
+                const marker = new google.maps.Marker({
+                    position: { lat: city.lat, lng: city.lng },
+                    map: map,
+                    title: city.name,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 8,
+                        fillColor: '#EA4335',
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: '#FFFFFF'
+                    }
+                });
+
+                marker.addListener('click', () => {
+                    // Reset all markers to red
+                    markers.forEach(m => {
+                        m.setIcon({
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 8,
+                            fillColor: '#EA4335',
+                            fillOpacity: 1,
+                            strokeWeight: 2,
+                            strokeColor: '#FFFFFF'
+                        });
+                    });
+                    // Set clicked marker to blue
+                    marker.setIcon({
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 10,
+                        fillColor: '#4285F4',
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: '#FFFFFF'
+                    });
+                    showCityNews(city.name);
+                });
+
+                markers.push(marker);
+            });
+        } catch (error) {
+            console.error('Error updating cities:', error);
+        }
+    }
+
+    // Wait for the map to be ready before updating cities
+    google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+        const bounds = map.getBounds();
+        if (bounds) {
+            updateCitiesInViewport(bounds);
+        }
     });
 }
 

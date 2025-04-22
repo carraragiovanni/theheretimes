@@ -40,9 +40,11 @@ function initMap() {
 // Fetch news for a city
 async function fetchNews(city) {
     try {
-        const response = await fetch(`https://newsapi.org/v2/everything?q=${city}&apiKey=${process.env.NEWS_API_KEY}&pageSize=8`);
-        const data = await response.json();
-        return data.articles;
+        const response = await fetch(`/api/news/${encodeURIComponent(city)}`);
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
+        return await response.json();
     } catch (error) {
         console.error('Error fetching news:', error);
         return [];

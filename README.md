@@ -19,7 +19,22 @@ A simple web application that displays a map of the US with markers for the top 
    NEWS_API_KEY=your_news_api_key_here
    ```
 5. Replace `YOUR_GOOGLE_MAPS_API_KEY` in `index.html` with your actual Google Maps API key
-6. Open `index.html` in a web browser
+
+## Running the Application
+
+### Development Mode
+```bash
+npm install
+npm run dev
+```
+
+### Production Mode
+```bash
+npm install
+npm start
+```
+
+The application will be available at http://localhost:3000
 
 ## Usage
 
@@ -35,6 +50,7 @@ A simple web application that displays a map of the US with markers for the top 
 - NewsAPI
 - CSS3 for styling
 - HTML5 for structure
+- Node.js with Express for local development
 
 ## Browser Support
 

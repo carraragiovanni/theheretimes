@@ -38,4 +38,4 @@ A simple web application that displays a map of the US with markers for the top 
 
 ## Browser Support
 
-The application works best in modern browsers that support ES6+ features and CSS3. 
+The application works best in modern browsers that support ES6+ features and CSS3.

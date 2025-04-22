@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const fetch = require('node-fetch');
 const app = express();
-const port = process.env.PORT || 3000;
+const defaultPort = 3000;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -37,7 +37,20 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-    console.log('Press Ctrl+C to stop the server');
-}); 
+// Function to start server on an available port
+function startServer(port) {
+    const server = app.listen(port, () => {
+        console.log(`Server running at http://localhost:${port}`);
+        console.log('Press Ctrl+C to stop the server');
+    }).on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.log(`Port ${port} is in use, trying port ${port + 1}...`);
+            startServer(port + 1);
+        } else {
+            console.error('Server error:', err);
+        }
+    });
+}
+
+// Start the server
+startServer(defaultPort); 

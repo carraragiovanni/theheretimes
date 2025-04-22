@@ -63,18 +63,35 @@ body {
     border-bottom: none;
 }
 
-.news-article h3 {
+.article-header {
+    display: flex;
+    align-items: center;
     margin-bottom: 10px;
+    gap: 10px;
+}
+
+.favicon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.article-title {
+    color: #1a73e8;
+    text-decoration: none;
+    font-size: 1.1em;
+    font-weight: bold;
+    flex: 1;
+}
+
+.article-title:hover {
+    text-decoration: underline;
 }
 
 .news-article p {
     color: #666;
     margin-bottom: 10px;
-}
-
-.news-article a {
-    color: #1a73e8;
-    text-decoration: none;
+    line-height: 1.4;
 }
 
 @media (max-width: 768px) {

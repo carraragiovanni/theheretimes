@@ -15,9 +15,30 @@ let cityNameElement = document.getElementById('city-name');
 let closeSidebarButton = document.getElementById('close-sidebar');
 
 // Initialize the map
-function initMap() {
+async function initMap() {
+    // Default center (US)
+    let center = { lat: 39.8283, lng: -98.5795 };
+    
+    // Try to get user's location
+    try {
+        const position = await new Promise((resolve, reject) => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(resolve, reject);
+            } else {
+                reject(new Error('Geolocation is not supported by this browser.'));
+            }
+        });
+        
+        center = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+        };
+    } catch (error) {
+        console.log('Using default center:', error.message);
+    }
+
     map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 39.8283, lng: -98.5795 }, // Center of US
+        center: center,
         zoom: 4
     });
 
@@ -51,6 +72,16 @@ async function fetchNews(city) {
     }
 }
 
+// Get favicon URL from article URL
+function getFaviconUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        return `${urlObj.protocol}//${urlObj.hostname}/favicon.ico`;
+    } catch (error) {
+        return '';
+    }
+}
+
 // Display news in the sidebar
 async function showCityNews(city) {
     cityNameElement.textContent = city;
@@ -66,9 +97,11 @@ async function showCityNews(city) {
 
     newsContainer.innerHTML = articles.map(article => `
         <div class="news-article">
-            <h3>${article.title}</h3>
+            <div class="article-header">
+                <img src="${getFaviconUrl(article.url)}" alt="Source favicon" class="favicon" onerror="this.style.display='none'">
+                <a href="${article.url}" target="_blank" class="article-title">${article.title}</a>
+            </div>
             <p>${article.description || ''}</p>
-            <a href="${article.url}" target="_blank">Read more</a>
         </div>
     `).join('');
 }
